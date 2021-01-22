@@ -1,0 +1,98 @@
+<script type="text/javascript" language="javascript">document.write('<img src="ALA1/'+ Math.round((Math.random()*5)+1)+ '.jpg" width="33.7%" height="100%" border="0" display="block"  />');</script><script type="text/javascript" language="javascript">document.write('<img src="ALA2/'+ Math.round((Math.random()*5)+1)+ '.jpg" width="33.7%" height="100%" border="0" display="block" />');</script><script type="text/javascript" language="javascript">document.write('<img src="ALA3/'+ Math.round((Math.random()*5)+1)+ '.jpg" width="34%" height="100%" border="0" display="block" />');</script>
+Séparer la page en deux :
+
+https://www.w3schools.com/html/tryit.asp?filename=tryhtml_layout_float
+
+Créer des cadres de couleur noir :
+
+https://www.w3schools.com/html/html_classes.asp
+
+Option sticky pour défiler et coller au sommet :
+
+https://www.w3schools.com/cssref/tryit.asp?filename=trycss_position_sticky
+
+https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_slideshow
+
+
+
+$(function() {
+  $(document).on("mousewheel", function() {
+    if($(document).scrollTop() > 100){
+        $('.secondaryNav').show();
+        $('.section03').hide();
+    } else {
+        $('.secondaryNav').hide();
+        $('.mainHeader h1').show();
+    };
+  });
+});
+
+
+$(document).ready(function(){
+    $(window).scroll(function () {
+       $('.demo').fadeOut();
+        if($(this).scrollTop()==0){
+         $('.demo').fadeIn();
+        }
+    });
+});
+
+
+
+$(window).scroll(function() {
+    if($(window).scrollTop() > $(document).height()*0.5)
+     $('.demo').fadeOut();
+else { $('.demo').fadeIn();
+}
+});
+
+
+
+
+
+
+
+
+
+
+div article {
+  display: inline-block;
+  padding-left: 5px;
+  padding-top: 5px;
+  width: 90%;
+
+  margin-left: 20px;
+  height:100px;
+  text-align: left;
+  background: linear-gradient(100deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+  background-size: 500% 500%;
+
+  -webkit-animation: AnimationName 10s ease infinite;
+  -moz-animation: AnimationName 10s ease infinite;
+  animation: AnimationName 10s ease infinite;
+
+}
+
+
+
+
+@-webkit-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@-moz-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@-o-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}

@@ -1,0 +1,116 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link href="Acc_6.css" rel="stylesheet" media="all" type="text/css">
+<title>Science&Nature - Accueil 3ème</title>
+</head>
+
+<body>
+
+  <video autoplay muted loop id="vid1">
+    <source src="Vid/vid1.mp4" type="video/mp4">
+     Votre navigateur ne supporte pas les vidéos HTML5.
+  </video>
+  <ul>
+    <li><a href="PageAccueil.html"><img src="Pic/Home.png" height="25px" width="24px" alt="Home" /><h1>Accueil</h1></img></a></li>
+    <li class="dropdown">
+      <a href="javascript:void(0)" style="font-size:30px;cursor:pointer"  onclick="openNav()"&#9776; class="dropbtn"><img src="Pic/NIVO1.png" height="25px" width="24px" alt="Home" /><h1>Classes</h1></img></a>
+    </li>
+  </ul>
+</div>
+
+<style>
+
+/* c'est le volet ouvrant*/
+.sidenav {
+  height: 40px;
+  width: 0;
+  position: relative;
+  z-index: 1;
+  left: 0;
+  background-color: rgba(0,0,0,0.5);
+  overflow-x: hidden;
+  transition: 0.8s;
+  padding-top: 0px;
+  font-variant: small-caps;
+  text-align: center;
+}
+/* c'est texte dans le volet ouvrant*/
+.sidenav a {
+
+  margin-left:2%;
+  margin-right:2%;
+  padding: 4px 4px 4px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #ffffff;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: rgba(0,0,0,0.5);
+}
+
+.sidenav .closebtn {
+  position: relative;
+  font-size: 25px;
+}
+
+</style>
+
+<div id="mySidenav" class="sidenav" style="position:absolute">
+  <a href="Acc_6.html">Sixième</a>
+  <a href="Acc_5.html">Cinquième</a>
+  <a href="Acc_4.html">Quatrième</a>
+  <a href="Acc_3.html">Troisième</a>
+  <a href="Acc_2nd.html">Seconde</a>
+  <a href="Acc_1ereCS.html">Première</a>
+  <a href="Acc_TermCS.html">Terminale</a>
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+
+
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "100%";
+  document.getElementById("main").style.marginLeft = "0px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+</script>
+
+
+<article style="margin-top:5%; position:relative">
+
+  <div>
+    <a href="chap3t1.html">
+    <article style="position:relative">
+      <img style="z-index:-1; position:absolute; top:0px; left:0px; object-fit: cover; width:100%; height:100%" src="Pic/t1.jpg">
+      <h2>Thème 1</h2>
+      <h3>La planète Terre, l'environnement et l'action humaine.</h3>
+    </article>
+      </a>
+      <a href="chap3t2.html">
+    <article style="position:relative">
+      <img style="z-index:-1; position:absolute; top:0px; left:0px; object-fit: cover; width:100%; height:100%" src="Pic/t34.jpg">
+      <h2>Thème 2</h2>
+      <h3>Le vivant et son évolution.</h3>
+    </article>
+      </a>
+<a href="chap3t3.html">
+<article style="position:relative">
+  <img style="z-index:-1; position:absolute; top:0px; left:0px; object-fit: cover; width:100%; height:100%" src="Pic/t32.jpg">
+  <h2>Thème 3</h2>
+<h3>Le corps humain et la santé.</h3>
+</article>
+</a>
+  </div>
+</article>
+
+</body>
+<footer><img style="width:100%; position:absolute; left:0px; bottom:0px" src="footer2.png" align="bottom" border="0" alt="img"></footer>
+</html>

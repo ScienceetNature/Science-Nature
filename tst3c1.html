@@ -1,0 +1,318 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link href="cours.css" rel="stylesheet" media="all" type="text/css">
+<title>Thème 3 - Chapitre 1 - Glycémie</title>
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+}
+
+#myBtn {
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 8px;
+  z-index: 99;
+  font-size: 18px;
+  border: none;
+  outline: none;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  cursor: pointer;
+  padding: 15px;
+  width:50px;
+  height:50px;
+  border-radius: 50%;
+}
+
+#myBtn:hover {
+  background-color: #555;
+}
+</style>
+</head>
+<script src="scriptmodal.js"></script>
+<body>
+
+  <video autoplay muted loop id="vid1">
+    <source src="Vid/vid1.mp4" type="video/mp4">
+     Votre navigateur ne supporte pas les vidéos HTML5.
+  </video>
+  <ul>
+    <li><a href="PageAccueil.html"><img src="Pic/Home.png" height="25px" width="24px" alt="Home" /><h1>Accueil</h1></img></a></li>
+    <li class="dropdown">
+      <a href="javascript:void(0)" style="font-size:30px;cursor:pointer"  onclick="openNav()"&#9776; class="dropbtn"><img src="Pic/NIVO1.png" height="25px" width="24px" alt="Classes" /><h1>Classes</h1></img></a>
+    </li>
+  </ul>
+</div>
+
+<style>
+
+/* c'est le volet ouvrant*/
+.sidenav {
+  height: 40px;
+  width: 0;
+  position: relative;
+  z-index: 1;
+  left: 0;
+  background-color: rgba(0,0,0,0.5);
+  overflow-x: hidden;
+  transition: 0.8s;
+  padding-top: 0px;
+  font-variant: small-caps;
+  text-align: center;
+}
+/* c'est texte dans le volet ouvrant*/
+.sidenav a {
+
+  margin-left:2%;
+  margin-right:2%;
+  padding: 4px 4px 4px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #ffffff;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: rgba(0,0,0,0.5);
+}
+
+.sidenav .closebtn {
+  position: relative;
+  font-size: 25px;
+}
+
+</style>
+
+<div id="mySidenav" class="sidenav" style="position:absolute">
+  <a href="Acc_6.html">Sixième</a>
+  <a href="Acc_5.html">Cinquième</a>
+  <a href="Acc_4.html">Quatrième</a>
+  <a href="Acc_3.html">Troisième</a>
+  <a href="Acc_2nd.html">Seconde</a>
+  <a href="Acc_1ereCS.html">Première</a>
+  <a href="Acc_TermCS.html">Terminale</a>
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+<script>
+  function hover(element) {
+  element.setAttribute('src', 'Pic/RC1.png');
+}
+
+function unhover(element) {
+  element.setAttribute('src', 'Pic/RC2.png');
+}
+</script>
+<a href="chaptst3.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:40px; margin-left:30px"/></a>
+
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "100%";
+  document.getElementById("main").style.marginLeft = "0px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+</script>
+
+<div class="fondfil"><h2>Le foie, un organe impliqué dans l'homéostat glycémique</h2></div>
+<div class="fondfil">
+
+  <!-- C'est la photo qui flotte à droite (code ci-dessous) -->
+
+
+<img class="photo" src="Pic/Term/LeFoie.png" alt="Intro" />
+
+
+  <h5><span style="font-size:25px; font-weight:bolder; text-decoration:underline">Introduction</span> : De nos jours, la part de sucre dans notre alimentation est prépondérante et ne cesse d'augmenter. Notre organisme a besoin de s'adapter face à ces variations, qui fluctuent fortement au cours d'une journée.</h5>
+<h5 style="margin-top:-8px; font-style: oblique"><span style="font-size:23px; font-weight:bolder;font-style: oblique; margin-top:-8px">Problématique</span> : Qu’est ce que l’homéostat glycémique et comment le foie peut-il intervenir dans sa régulation ?</h5></br></div>
+<div class="fondfil"><h3>I. L'homéostasie glycémique</h3>
+<h4>a. La glycémie</h4>
+<img class="photo" style="width:55%; float:left" src="Pic/Term/Cochon.png" alt="Intro" />
+<h5>Utilisation d'un test glycémique sur le sang d'un cochon.</h5>
+<img class="photo" style="width:55%; float:left" src="Pic/Term/tablo.png" alt="Intro" />
+<h5>Chaque groupe effectue un test sur un échantillon différent, de manière à obtenir une glycémie moyenne.</h5>
+</br>
+<h5> <span style="font-weight:bolder">Glycémie : </span>Concentration en glucose sanguin, en moyenne à 1g/L (en dessous de 0,5g/L = hypoglycémie et au-dessus de 1,2 g/L = hyperglycémie). </h5>
+<h4 style="margin-top:100px">b. Les variations de la glycémie et notion d’homéostat</h4>
+<!-- Ci-après c'est l'image modale qui est centrée au milieu de la div -->
+  <div class="container3"style="margin-left:50px; margin-right:20px">
+    <img src="Pic/Term/vjour.jpg" style="max-width:100%;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+      <div><h6>Variation de la glycémie sur 3 jours.</h6></div>
+  </div>
+
+
+  <div id="modal01" class="modal" onclick="this.style.display='none'">
+    <span class="close">&times;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="modal-content">
+      <img id="img01" style="max-width:100%">
+    </div>
+
+  </div>
+<!-- Fin de l'image modale -->
+
+<h5>Observation : Il y a des variations au cours de la journée, mais elles semblent régulées autour du point de consigne.</h5>
+
+<!-- Ci-après c'est l'image modale qui est centrée au milieu de la div -->
+</br>
+  <div class="container2" style="width:450px">
+    <img src="Pic/Term/tablo2.png" style="max-width:100%;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+      <div><h6>Variation de la glycémie à un moment de la journée.</h6></div>
+  </div>
+
+
+  <div id="modal02" class="modal" onclick="this.style.display='none'">
+    <span class="close">&times;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="modal-content">
+      <img id="img02" style="max-width:100%">
+
+    </div>
+  </div>
+<!-- Fin de l'image modale -->
+<h5 style="margin-top:50px">Observation : Sur le graphe précedent, il semblerait que les variations soient minimes. Mais si on zoom sur un moment de la journée, la variation semble tout de suite plus importante.</h5>
+</br>
+</br>
+</br>
+</br>
+</br>
+</div>
+<div class="fondfil"><h3>II. Le foie, acteur de la régulation de l’homéostat glycémique</h3>
+</br>
+<img class="photo" style="width:65%" src="Pic/Term/angioschema.png" alt="Angiographie par tomodensimétrie" />
+<h6>Angiographie par tomodensitométrie</h6>
+
+
+<h4>a. Mécanisme post-prandiale: le stockage</h4>
+<img class="photo" style="width:45%; float:left" src="Pic/Term/grahpa.png" alt="Mesure Glycémie après repas" />
+<h5>Les mesures glycémiques après repas permettent de comprendre qu'une partie des sucres reste dans le foie.</h5>
+
+
+<!-- Ci-après c'est l'image modale qui est centrée au milieu de la div -->
+  <div class="container2">
+    <img src="Pic/Term/hepatocyte+glycogene+lugol.jpg" style="max-width:100%;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+          <div><h6>Grains de glycogène dans hepatocytes.</h6></div>
+  </div>
+
+  <div id="modal03" class="modal" onclick="this.style.display='none'">
+    <span class="close">&times;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="modal-content">
+      <img id="img03" style="max-width:100%">
+    </div>
+
+  </div>
+<!-- Fin de l'image modale -->
+
+<div style="margin-left:12%">
+  <img class="photo" style="width:65%" src="Pic/Term/StructureCompareeGluGly.png" alt="Comparaison de la structure de glucose et de glycogène" />
+  <h6>Structure moléculaire comparée d'une molécule de glucose et de glycogène.</h6>
+</div>
+
+<h4 style="margin-top:35px">b. Mécanisme à jeun : le relargage</h4>
+<img class="photo" style="width:45%; float:left; margin-bottom:50px" src="Pic/Term/graphb.png" alt="Mesure Glycémie à jeun" />
+<h5>Après une période de jeun, la glycémie mesurée au niveau de l'intestin et de la veine porte est inférieure à la glycémie mesurée à la sortie du foie. Ce dernier est donc capable de relarguer du glucose dans le sang.</h5>
+<h5 style="font-weight:bolder">Expérience du foie lavé.</h5>
+<h5 style="margin-top:-20px">L'expérience permet de prouver que le foie est bel-et-bien capable de relarguer du glucose. Utiliser un muscle sert de témoin négatif, le muscle conserve le glucose pour sa propre utilisation.</h5>
+<img class="photo" style="width:55%; float:left; margin-left:20%" src="Pic/Term/tablo3.png" alt="Intro" />
+</br>
+</br>
+</br>
+</br>
+</br>
+</br>
+<h6>Tableau récapitulatif des expériences</h6>
+</div>
+
+
+<div class="fondfil"><h3>III. Le foie en coopération avec d’autres organes</h3>
+<h4>a. Mise en évidence du rôle du pancréas</h4>
+<h5>Des expériences historiques permettent de révéler que le pancréas joue un rôle important dans la régulation de la glycémie.</h5>
+
+
+<!-- Ci-après c'est l'image modale qui est centrée au milieu de la div -->
+  <div class="container1">
+    <img src="Pic/Term/docp1.png" style="max-width:100%;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+    <h6>Document professionnel partie 1</h6>
+  </div>
+
+
+  <div id="modal04" class="modal" onclick="this.style.display='none'">
+    <span class="close">&times;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="modal-content">
+      <img id="img04" style="max-width:100%">
+    </div>
+  </div>
+<!-- Fin de l'image modale -->
+
+<h5 style="font-weight:bolder">Etude de la structure du pancréas.</h5>
+<h5 style="margin-top:-30px">L'etude immuno-histochimique du pancréas permet de retrouver plus facilement les structures sous le microscope.</h5>
+<div>
+<img src="Pic/Term/immuno.png" style="width:500px;float:left; margin-left:50px;margin-right:20px;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+</div>
+<div>
+<img src="Pic/Term/alphabeta.png" style="max-width:100%;float:right;margin-right:50px;margin-left:50px;margin-bottom:50px;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+</div>
+<h5 style="margin-top:300px">Attendu : réalisation d'un schéma d'interprétation de la coupe OU annotation d'une capture d'écran des îlots de Langerhans.</h5>
+<h4 style="margin-top:50px">b. La relation entre le foie et le pancréas </h4>
+<h5>Le pancréas n'étant pas relié au foie par un canal particulier (expérience de Von Mering) cela signifie que le dialogue entre les deux organes se fait par le sang.</h5>
+
+<!-- Ci-après c'est l'image modale qui est centrée au milieu de la div -->
+  <div class="container1">
+    <img src="Pic/Term/docp2.png" style="max-width:100%;cursor:pointer" onclick="onClick(this)" class="modal-hover-opacity">
+        <div><h6>Document professionnel 2.</h6></div>
+  </div>
+
+
+  <div id="modal05" class="modal" onclick="this.style.display='none'">
+    <span class="close">&times;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="modal-content">
+      <img id="img05" style="max-width:100%">
+    </div>
+  </div>
+<!-- Fin de l'image modale -->
+</br>
+</br>
+</br>
+</br>
+
+
+</div>
+
+<div class="fondfil"><h5><span style="font-size:25px; font-weight:bolder; text-decoration:underline">Conclusion</span> : Schéma bilan</h5><h5 style="margin-top:-8px; font-style: oblique"><span style="font-size:23px; font-weight:bolder;font-style: oblique; margin-top:-8px">Ouverture</span> : Quelles sont les molécules sécrétées par le pancréas et en quoi sont-elles impliquées dans les maladies comme le diabète ?</h5></div>
+
+
+
+<button onclick="topFunction()" id="myBtn" title="Go to top">&#94;</button>
+
+<!-- Ci dessous c'est le script du scroll to top -->
+
+<script>
+//Get the button
+var mybutton = document.getElementById("myBtn");
+
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
+    mybutton.style.display = "block";
+  } else {
+    mybutton.style.display = "none";
+  }
+}
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+</script>
+<!-- C'est la fin du scroll to top script -->
+
+</body>
+<footer><img style="width:100%;position:relative; left:0px; bottom:0px " src="footer2.png" align="bottom" border="0" alt="img"></footer>
+</html>

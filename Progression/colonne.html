@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html>
+<link href="colonne.css" rel="stylesheet" media="all" type="text/css">
+
+<title>Science&Nature - Page d'accueil</title>
+
+<body>
+
+<video autoplay muted loop id="vid1">
+  <source src="Vid/vid1.mp4" type="video/mp4">
+   Votre navigateur ne supporte pas les vidéos HTML5.
+</video>
+
+<script>
+var video = document.getElementById("vid1");
+var btn = document.getElementById("myBtn");
+
+function myFunction() {
+  if (video.paused) {
+    video.play();
+    btn.innerHTML = "Pause";
+  } else {
+    video.pause();
+    btn.innerHTML = "Lecture";
+  }
+}
+</script>
+
+<div class="blocinvisiblepoursticky"></div>
+<div class="positiondusticky">
+  <h1>Science&Nature</h1>
+  <p>Bienvenue sur le site Science&Nature. Tu trouveras ici le support du cours.</p>
+  <button id="myBtn" onclick="myFunction()">Pause</button>
+</div>
+
+<div id="colonne1"><h3>6</h3><h2>ème</h2></div>
+<div id="colonne2"><h4>Sur Mars, il existe un volcan de plus 22 Km de haut, soit presque 3 fois plus que la hauteur de l'Himalaya.
+</br>
+</br>
+Un cousin des méduses vivant en eau douce, l'hydre, est le seul animal qui ne peut pas mourrir naturellement.
+</br>
+</br>
+ Un être humain sur deux est atteint de la toxoplasmose. Ce parasite, Toxoplasma Gondii, est notamment connu pour modifier le comportement des souris qu'il infecte. Ces dernières perdent alors la notion du danger, et ne prennent plus la fuite face à un prédateur.
+</h4></div>
+<div id="centre"><h3>5</h3><h2>ème</h2></div>
+<br>
+<div id="colonne1"><h3>4</h3><h2>ème</h2></div>
+<div id="colonne2"><img src="Pic/bande.jpg"><h5>"L'homme est fou. Il adore un Dieu invisible et détruit une Nature visible, inconscient que la Nature qu'il détruit est le Dieu qu'il vénère." Hubert Reeves</h5></div>
+<div id="centre"><h3>3</h3><h2>ème</h2></div>
+
+<footer>Science&Nature - 2019</footer>
+
+</body>
+</html>

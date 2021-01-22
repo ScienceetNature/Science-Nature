@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link href="colonne.css" rel="stylesheet" media="all" type="text/css">
+
+
+<title>Science&Nature - Page d'accueil</title>
+<style>
+
+.mySlides {display: none} /* ??????? */
+video {vertical-align: middle;} /* ??????? */
+
+/* Slideshow container c'est la taille de la div qui contient tout */
+.slideshow-container {
+  max-width: 2000px;
+  position: relative;
+  margin: auto;
+}
+
+/* Next & previous buttons */
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -22px;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  transition: 0.6s ease;
+  border-radius: 3 3px 3px 3;
+  user-select: none;
+  background-color: rgba(0,0,0,0.5);
+}
+
+/* Position the "next button" to the right */
+.next {
+  right: 12%;
+  border-radius: 3px 3 3 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover, .next:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+
+/* The dots/bullets/indicators les billes pour savoir ou onen est */
+.dot {
+  cursor: pointer;
+  height: 15px;
+  width: 15px;
+  margin: 0 2px;
+  background-color: #949494;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.s ease;
+}
+
+.active, .dot:hover {
+  background-color: #5e5e5e;
+}
+
+/* Fading animation a chaque transition d'image */
+.fade {
+  -webkit-animation-name: fade;
+  -webkit-animation-duration: 1.5s;
+  animation-name: fade;
+  animation-duration: 1.5s;
+}
+
+@-webkit-keyframes fade {
+  from {opacity: .4}
+  to {opacity: 1}
+}
+
+@keyframes fade {
+  from {opacity: .4}
+  to {opacity: 1}
+}
+
+/* On smaller screens, decrease text size */
+@media only screen and (max-width: 300px) {
+  .prev, .next,.text {font-size: 11px}
+}
+</style>
+<script src="jquery-3.4.1.js"></script>
+<script src="jquery.visible.js"></script>
+</head>
+<body onload="init()">
+
+<video autoplay muted loop id="vid1">
+  <source src="Vid/vid1.mp4" type="video/mp4">
+   Votre navigateur ne supporte pas les vidéos HTML5.
+</video>
+
+
+
+
+<script>
+$(window).scroll(function() {
+    if($(window).scrollTop() > $(document).height()*0.45)
+     $('.demo').fadeOut();
+else { $('.demo').fadeIn();
+}
+});
+</script>
+
+<script>
+var video = document.getElementById("vid1");
+var btn = document.getElementById("myBtn");
+
+function myFunction() {
+  if (video.paused) {
+    video.play();
+    btn.innerHTML = "Pause";
+  } else {
+    video.pause();
+    btn.innerHTML = "Lecture";
+  }
+}
+</script>
+
+<script>
+$(window).scroll(function() {
+    $('video').each(function() {
+        if ($(this).visible(true)) {
+            $(this)[0].play();
+        } else {
+            $(this)[0].pause();
+        }
+    })
+});
+</script>
+
+<div class="blocinvisiblepoursticky"><div style='display:none;' id='invisible'><div class="slideshow-container">
+  <div style="text-align:center; margin-bottom:-70px; margin-top:55px">
+    <span class="dot" onclick="currentSlide(1)"></span>
+    <span class="dot" onclick="currentSlide(2)"></span>
+    <span class="dot" onclick="currentSlide(3)"></span>
+    <span class="dot" onclick="currentSlide(4)"></span>
+  </div>
+<div class="mySlides fade">
+<div class="row">
+<div class="column"><video src="Vid/vud2low.mp4"  muted loop style="width:100%"></div>
+  <div class="column"><div><h6>Mimosa pudique</h6><p  style="font-size: 17px; color: white; text-align: justify; margin-right:10px; margin-top:-20px">Suite à un choc, la sensitive ou encore mimosa pudique, replie ses feuilles en expulsant très rapidement de l'eau de ses cellules. Cette faculté est appellée thigmonastie et permet à cette plante de se protéger des intempéries ou des herbivores venant la consommer. Il est même possible d'en faire sa propre plante d'intérieur.</p></div></div>
+
+</div>
+</div>
+
+<div class="mySlides fade">
+  <div class="row">
+  <div class="column"><video src="Vid/colibri.mp4"   muted loop style="width:100%"></div>
+    <div class="column"><div><h6>Colibris</h6><p  style="font-size: 17px; color: white; text-align: justify; margin-right:10px; margin-top:-20px">Les colibris sont les oiseaux de tous les records. Par exemple, ceux sont les seuls volatiles capables de battre des ailes à l'envers. Ces dernières battent d'ailleurs jusqu'à 100 fois par seconde, mais ce n'est rien comparé aux 1000 battements par minute de son coeur. Le colibri porte-épée est le seul oiseau ayant un bec plus long que son propre corps. Enfin, le colibri d'Elena détient des records de taille et de poids, puisqu'il est aussi petit qu'une allumette et léger qu'une myrtille.</p></div></div>
+  </div>
+</div>
+
+<div class="mySlides fade">
+  <div class="row">
+  <div class="column"><video src="Vid/blob1.mp4"   muted loop style="width:100%"></div>
+    <div class="column"><div><h6>Blob</h6><p  style="font-size: 17px; color: white; text-align: justify; margin-right:10px; margin-top:-20px">Cet organisme est une véritable curiosité. Il n'est composé que d'une seule cellule et pourtant il peut se répandre sur une surface de 10m ². L'immortalité est également une de ses facultés puisqu'il est capable de s'enkyster indéfiniment en attendant des jours plus propices. Même s'il a l'air mou, le blob est pourtant doté d'une intelligence remarquable, il anticipe, apprend et transmet. Il choisira toujours le chemin le plus rapide vers sa nourriture.</p></div></div>
+  </div>
+</div>
+
+<div class="mySlides fade">
+  <div class="row">
+  <div class="column"><video src="Vid/parade.mp4"  muted loop style="width:100%"></div>
+    <div class="column"><div><h6>Parades nuptiales</h6><p  style="font-size: 17px; color: white; text-align: justify; margin-right:10px; margin-top:-20px">Chez les oiseaux, les parades nuptiales sont poussées à l'extrême. Pour prouver aux femelles qu'ils sont un bon parti, les mâles n'hésitent pas à exposer leur plus beau plumage ou bien à préparer le nid le plus douillé. D'autres encore élaborent des danses sophistiquées, certains vont même jusqu'à demander de l'aide à des mâles plus jeunes dans le but d'élaborer une chorégraphie de groupe synchronisée.</p></div></div>
+  </div>
+</div>
+<div style="margin-left:12%">
+<a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+</div>
+<a class="next" onclick="plusSlides(1)">&#10095;</a>
+</div>
+</div></div>
+
+<div class="positiondusticky">
+  <h1>Science&Nature</h1>
+  <p>Bienvenue sur le site Science&Nature. Tu trouveras ici le support du cours.</p>
+  <button  id="myBtn" onclick="myFunction()">Pause</button>
+  <button onclick="DOUBLEINVISBLE()" id="myBtn2">Découvertes</button>
+  <section id="section03" class="demo">
+  <a href="#scrollhere"><span></span></a>
+</section>
+</div>
+
+
+<article style="margin-top:5%">
+
+  <div>
+    <a href="Acc_6.html" style="float:left">
+    <article>
+      <h3>6</h3><h2>ème</h2>
+    </article>
+      </a>
+      <a href="Acc_5.html" >
+    <article>
+      <h3>5</h3><h2>ème</h2>
+    </article>
+  </a>
+  </div>
+
+  <div class="colonne2">
+    <h5>Générateur d'anécdotes</h5>
+    <h4><div id="ShowText"></div></h4>
+  </div>
+
+</article>
+
+
+<article>
+  <div>
+    <a href="Acc_4.html" style="float:left">
+    <article>
+      <h3>4</h3><h2>ème</h2>
+    </article>
+  </a>
+  <a href="Acc_3.html">
+    <article>
+      <h3>3</h3><h2>ème</h2>
+    </article>
+  </a>
+  </div>
+  <div class="colonne2" style="background: rgba(0, 0, 0, 0)"><img id="imgAleatoire" src="ALA1/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script><img id="imgAleatoire2" src="ALA2/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script><img id="imgAleatoire3" src="ALA3/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script>
+</div>
+</article>
+<script>
+var slideIndex = 1;
+showSlides(slideIndex);
+
+function plusSlides(n) {
+  showSlides(slideIndex += n);
+}
+
+function currentSlide(n) {
+  showSlides(slideIndex = n);
+}
+
+function showSlides(n) {
+  var i;
+  var slides = document.getElementsByClassName("mySlides");
+  var dots = document.getElementsByClassName("dot");
+  if (n > slides.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = slides.length}
+  for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+  }
+  for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+  }
+  slides[slideIndex-1].style.display = "block";
+  dots[slideIndex-1].className += " active";
+}
+</script>
+</body>
+<footer id="scrollhere"><img style="width:100%" src="footer2.png" align="bottom" border="0" alt="img"></footer>
+</html>

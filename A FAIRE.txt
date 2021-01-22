@@ -1,0 +1,4 @@
+Ajouter la case lycée à la page d'accueil
+Eventuellement retoucher la police d'écriture de la nav bar qui varie entre chapitre et theme
+Créer une page de cours (Pour le bouton retour, penser à nommer le bouton XXXYYY.html pour faciliter la modification ultérieur)
+Créer une page de cours en cours de construction (Pour le bouton retour, penser à nommer le bouton XXXYYY.html pour faciliter la modification ultérieur)
