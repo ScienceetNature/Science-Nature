@@ -9,6 +9,17 @@
 <title>Science&Nature - Page d'accueil</title>
 <style>
 
+div.disparait {
+
+}
+
+@media all and (max-width: 1480px){
+  div.disparait {
+display: none;
+  }
+
+}
+
 .mySlides {display: none} /* ??????? */
 video {vertical-align: middle;} /* ??????? */
 
@@ -215,7 +226,7 @@ $(window).scroll(function() {
   </a>
   </div>
 
-  <div class="colonne2">
+  <div class="colonne2 disparait">
     <h5>Générateur d'anécdotes</h5>
     <h4><div style="margin-left:55px; margin-right:2%" id="ShowText"></div></h4>
   </div>
