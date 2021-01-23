@@ -63,7 +63,8 @@ margin-left: 20px;
 h3 {
 
   margin-top:100px;
-  margin-left: 100px;
+  margin-left: 50px;
+  letter-spacing:-1px;
   color:rgba(255,255,255,0.9);
   overflow:hidden;
   font-family: arial;
