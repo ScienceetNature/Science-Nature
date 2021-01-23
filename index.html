@@ -29,6 +29,18 @@ div.pousse {
   margin-left:20vw;
 }
 }
+
+div.anecdo {
+
+}
+
+@media all and (min-width: 1000px) {
+div.anecdo {
+
+  display:none;
+}
+}
+
 .mySlides {display: none} /* ??????? */
 video {vertical-align: middle;} /* ??????? */
 
@@ -259,6 +271,14 @@ $(window).scroll(function() {
   <div class="colonne2" style="background: rgba(0, 0, 0, 0)"><img id="imgAleatoire" src="ALA1/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script><img id="imgAleatoire2" src="ALA2/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script><img id="imgAleatoire3" src="ALA3/1.jpg" onclick="imageAChanger()" width="33.33%" height="100%" display="block"><script src="ALEA.js"></script>
 </div>
 </article>
+
+<article>
+<div class="colonne2 anecdo">
+  <h5>Générateur d'anécdotes</h5>
+  <h4><div style="margin-left:55px; margin-right:2%" id="ShowText2"></div></h4>
+</div>
+</article>
+
 <script>
 var slideIndex = 1;
 showSlides(slideIndex);
