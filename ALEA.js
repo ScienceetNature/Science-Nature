@@ -1,6 +1,7 @@
 function init() { // sera appeler au début (chargement de la page)
 
   RndText();
+  RndText2();
     setInterval(function () {LAFONCTIONENQUESTION();},3500)
       setInterval(function() { RndText(); }, 10000);
         setInterval(function() { RndText2(); }, 10000)
