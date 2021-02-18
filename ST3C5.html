@@ -19,6 +19,8 @@ img {vertical-align: middle;}
   margin-top:40px;
 }
 
+
+
 /* Next & previous buttons */
 .prev, .next {
   cursor: pointer;
@@ -298,13 +300,28 @@ function topFunction() {
 <div class="mySlides fade">
 
   <img src="Pic/LYCEE/SECONDE/THEME3/CHAP5/SITE9.png" style="width:100%">
+  <script type = "text/javascript">
+        function pic1()
+        {
+            document.getElementById("img").src = "Pic/LYCEE/SECONDE/THEME3/CHAP5/coloration.png";
+        }
+     </script>
+
+    <img src = "" id = "img" style="width:70%"/> <input type="button" style="   width: 200px;
+       font-size: 18px;
+       padding: 10px;
+       border: none;
+       background: rgba(0,0,0,0.5);
+       color: #fff;
+       cursor: pointer; " value="Coloration de Gram" onclick="pic1()"/>
 
 </div>
 
 <div class="mySlides fade">
 
   <img src="Pic/LYCEE/SECONDE/THEME3/CHAP5/SITE10.png" style="width:100%">
-
+<a href="Cours/Lycee/Seconde/THEME3/CHAP5/Cours_2nd_T3_C5.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline">Cours - Chapitre 5</h1></img></a>
+<a href="Cours/Lycee/Seconde/THEME3/CHAP5/Ficheprotocole_Microbiote_2nd.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline">Fiche TP protocoles</h1></img></a>
 </div>
 
 <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
