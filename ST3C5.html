@@ -78,6 +78,23 @@ img {vertical-align: middle;}
   background-color: #595959;
 }
 
+
+/* changemet de couleur des liens des fichiers a telecharger */
+@keyframes color-change {
+ 0% { color: #ffffff; }
+ 10% { color: #e6e6e6; }
+ 20% { color: #b3b3b3; }
+ 30% { color: #737373; }
+ 40% { color: #333333; }
+ 50% { color: #000000; }
+ 60% { color: #333333; }
+ 70% { color: #737373; }
+ 80% { color: #b3b3b3; }
+ 90% { color:  #e6e6e6; }
+ 100% { color: #ffffff; }
+}
+
+
 /* Fading animation */
 .fade {
   -webkit-animation-name: fade;
@@ -205,7 +222,7 @@ function unhover(element) {
   element.setAttribute('src', 'Pic/RC2.png');
 }
 </script>
-<a href="chap2t1.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:-80px; margin-left:30px"/></a>
+<a href="chap2t3.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:-80px; margin-left:30px"/></a>
 
 <script>
 function openNav() {
@@ -320,9 +337,9 @@ function topFunction() {
 <div class="mySlides fade">
 
   <img src="Pic/LYCEE/SECONDE/THEME3/CHAP5/SITE10.png" style="width:100%">
-<a href="Cours/Lycee/Seconde/THEME3/CHAP5/Cours_2nd_T3_C5.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline">Cours - Chapitre 5</h1></img></a>
-<a href="Cours/Lycee/Seconde/THEME3/CHAP5/Ficheprotocole_Microbiote_2nd.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline">Fiche TP protocoles</h1></img></a>
-</div>
+  <a href="Cours/Lycee/Seconde/THEME3/CHAP5/Cours_2nd_T3_C5.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Cours - Chapitre 5</h1></img></a>
+  <a href="Cours/Lycee/Seconde/THEME3/CHAP5/Ficheprotocole_Microbiote_2nd.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Fiche TP protocoles</h1></img></a>
+  </div>
 
 <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
 <a class="next" onclick="plusSlides(1)">&#10095;</a>

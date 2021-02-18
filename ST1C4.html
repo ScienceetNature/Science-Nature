@@ -76,6 +76,22 @@ img {vertical-align: middle;}
   background-color: #595959;
 }
 
+/* changemet de couleur des liens des fichiers a telecharger */
+@keyframes color-change {
+ 0% { color: #ffffff; }
+ 10% { color: #e6e6e6; }
+ 20% { color: #b3b3b3; }
+ 30% { color: #737373; }
+ 40% { color: #333333; }
+ 50% { color: #000000; }
+ 60% { color: #333333; }
+ 70% { color: #737373; }
+ 80% { color: #b3b3b3; }
+ 90% { color:  #e6e6e6; }
+ 100% { color: #ffffff; }
+}
+
+
 /* Fading animation */
 .fade {
   -webkit-animation-name: fade;
@@ -304,6 +320,8 @@ function topFunction() {
 <div class="mySlides fade">
 
   <img src="Pic/LYCEE/SECONDE/THEME1/CHAP4/SITE10.png" style="width:100%">
+  <a href="Cours/Lycee/Seconde/THEME1/CHAP4/Cours_2nd_T1_C4.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Cours - Chapitre 4</h1></img></a>
+  <a href="Cours/Lycee/Seconde/THEME1/CHAP6/Fiche_protocole_Biodiversité.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Fiche TP consignes</h1></img></a>
 
 </div>
 
