@@ -1,0 +1,361 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link href="cours.css" rel="stylesheet" media="all" type="text/css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thème 2 - Activité 7 - Cinquième</title>
+
+<style>
+* {box-sizing: border-box}
+body {font-family: Verdana, sans-serif; margin:0}
+.mySlides {display: none}
+img {vertical-align: middle;}
+
+/* Slideshow container */
+.slideshow-container {
+  max-width: 1300px;
+  position: relative;
+  margin: auto;
+  margin-top:40px;
+}
+
+/* Next & previous buttons */
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -22px;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+}
+
+/* Position the "next button" to the right */
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover, .next:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+/* Caption text */
+.text {
+  color: #f2f2f2;
+  font-size: 15px;
+  padding: 8px 12px;
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+
+
+/* The dots/bullets/indicators */
+.dot {
+  cursor: pointer;
+  height: 15px;
+  width: 15px;
+  margin: 0 2px;
+  margin-top: -35px;
+  background-color: #999999;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.6s ease;
+}
+
+.active, .dot:hover {
+  background-color: #595959;
+}
+
+/* changemet de couleur des liens des fichiers a telecharger */
+@keyframes color-change {
+ 0% { color: #ffffff; }
+ 10% { color: #e6e6e6; }
+ 20% { color: #b3b3b3; }
+ 30% { color: #737373; }
+ 40% { color: #333333; }
+ 50% { color: #000000; }
+ 60% { color: #333333; }
+ 70% { color: #737373; }
+ 80% { color: #b3b3b3; }
+ 90% { color:  #e6e6e6; }
+ 100% { color: #ffffff; }
+}
+
+
+/* Fading animation */
+.fade {
+  -webkit-animation-name: fade;
+  -webkit-animation-duration: 3.5s;
+  animation-name: fade;
+  animation-duration: 3.5s;
+}
+
+@-webkit-keyframes fade {
+  from {opacity: .3}
+  to {opacity: 1}
+}
+
+@keyframes fade {
+  from {opacity: .3}
+  to {opacity: 1}
+}
+
+/* On smaller screens, decrease text size */
+@media only screen and (max-width: 300px) {
+  .prev, .next,.text {font-size: 11px}
+}
+</style>
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+}
+
+#myBtn {
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 45px;
+  z-index: 99;
+  font-size: 18px;
+  border: none;
+  outline: none;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  cursor: pointer;
+  padding: 15px;
+  width:50px;
+  height:50px;
+  border-radius: 50%;
+}
+
+#myBtn:hover {
+  background-color: #555;
+}
+</style>
+</head>
+<script src="scriptmodal.js"></script>
+<body>
+
+
+  <video autoplay muted loop id="vid1">
+    <source src="Vid/vid1.mp4" type="video/mp4">
+     Votre navigateur ne supporte pas les vidéos HTML5.
+  </video>
+  <ul>
+    <li><a href="index.html"><img src="Pic/Home.png" height="25px" width="24px" alt="Home" /><h1>Accueil</h1></img></a></li>
+    <li class="dropdown">
+      <a href="javascript:void(0)" style="font-size:30px;cursor:pointer"  onclick="openNav()"&#9776; class="dropbtn"><img src="Pic/NIVO1.png" height="25px" width="24px" alt="Classes" /><h1>Classes</h1></img></a>
+    </li>
+  </ul>
+</div>
+
+<style>
+
+/* c'est le volet ouvrant*/
+.sidenav {
+  height: 40px;
+  width: 0;
+  position: relative;
+  z-index: 1;
+  left: 0;
+  background-color: rgba(0,0,0,0.5);
+  overflow-x: hidden;
+  transition: 0.8s;
+  padding-top: 0px;
+  font-variant: small-caps;
+  text-align: center;
+}
+/* c'est texte dans le volet ouvrant*/
+.sidenav a {
+
+  margin-left:2%;
+  margin-right:2%;
+  padding: 4px 0px 4px 0px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #ffffff;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: rgba(0,0,0,0.5);
+}
+
+.sidenav .closebtn {
+  position: relative;
+  font-size: 25px;
+}
+
+</style>
+
+<div id="mySidenav" class="sidenav" style="position:absolute">
+  <a href="Acc_6.html">Sixième</a>
+  <a href="Acc_5.html">Cinquième</a>
+  <a href="Acc_4.html">Quatrième</a>
+  <a href="Acc_3.html">Troisième</a>
+  <a href="Acc_2nd.html">Seconde</a>
+  <a href="Acc_1ereCS.html">Première</a>
+  <a href="Acc_TermCS.html">Terminale</a>
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+<script>
+  function hover(element) {
+  element.setAttribute('src', 'Pic/RC1.png');
+}
+
+function unhover(element) {
+  element.setAttribute('src', 'Pic/RC2.png');
+}
+</script>
+<a href="chap5t2.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:-80px; margin-left:30px"/></a>
+
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "100%";
+  document.getElementById("main").style.marginLeft = "0px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+</script>
+
+
+<button onclick="topFunction()" id="myBtn" title="Go to top">&#94;</button>
+
+<!-- Ci dessous c'est le script du scroll to top -->
+
+<script>
+//Get the button
+var mybutton = document.getElementById("myBtn");
+
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
+    mybutton.style.display = "block";
+  } else {
+    mybutton.style.display = "none";
+  }
+}
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+</script>
+<!-- C'est la fin du scroll to top script -->
+<div class="slideshow-container">
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a71.webp" style="width:100%">
+  <a href="Cours/College/5/T2A7/5e_T2_A7.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Fiche élève</h1></img></a>
+  <a href="Cours/College/5/T2A7/Ressources_5e_T2_A7.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Ressource</h1></img></a>
+
+</div>
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a72.webp" style="width:100%">
+  <a href="Cours/College/5/T2A7/5T2A7_Grille_aevaluation.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Auto-évaluation</h1></img></a>
+
+
+</div>
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a73.webp" style="width:100%">
+
+</div>
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a74.webp" style="width:100%">
+
+</div>
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a75.webp" style="width:100%">
+
+</div>
+
+<div class="mySlides fade">
+
+  <img src="Pic/COLLEGE/5/T2A7/f5t1a76.webp" style="width:100%">
+  <a href="Cours/College/5/T2A7/[C]_5_T1_A7.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Leçon</h1></img></a>
+  <a href="Cours/College/5/T2A7/Correction_5e_T2_A7.rar" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Correction</h1></img></a>
+
+  <a href="https://youtu.be/GBQ-lW8dIjg"><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline">La soif du monde</h1></img></a>
+
+</div>
+
+
+
+
+<a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+<a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+</div>
+<br>
+
+<div style="text-align:center">
+  <span class="dot" onclick="currentSlide(1)"></span>
+  <span class="dot" onclick="currentSlide(2)"></span>
+  <span class="dot" onclick="currentSlide(3)"></span>
+    <span class="dot" onclick="currentSlide(4)"></span>
+        <span class="dot" onclick="currentSlide(5)"></span>
+            <span class="dot" onclick="currentSlide(6)"></span>
+
+
+</div>
+
+<script>
+var slideIndex = 1;
+showSlides(slideIndex);
+
+function plusSlides(n) {
+  showSlides(slideIndex += n);
+}
+
+function currentSlide(n) {
+  showSlides(slideIndex = n);
+}
+
+function showSlides(n) {
+  var i;
+  var slides = document.getElementsByClassName("mySlides");
+  var dots = document.getElementsByClassName("dot");
+  if (n > slides.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = slides.length}
+  for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+  }
+  for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+  }
+  slides[slideIndex-1].style.display = "block";
+  dots[slideIndex-1].className += " active";
+}
+</script>
+
+
+</body>
+<footer><img style="width:100%;position:relative; left:0px; bottom:0px " src="footer2.png" align="bottom" border="0" alt="img"></footer>
+</html>
