@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Page de mot de passe</title>
+
+	<style>
+
+	canvas {
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index:-1;
+	}
+
+		body {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background-color: #000;
+			background-size: cover;
+			background-attachment: fixed;
+		}
+
+		.container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+		}
+
+		input[type=password] {
+			padding: 10px;
+			border-radius: 5px;
+			border: none;
+			margin-bottom: 20px;
+			font-size: 18px;
+			color: #fff;
+			background-color: #222;
+			outline: none;
+			text-align: center;
+		}
+
+		button {
+			padding: 10px 20px;
+			border-radius: 5px;
+			border: none;
+			background-color: #2E8B57;
+			color: #fff;
+			font-size: 18px;
+			cursor: pointer;
+			transition: all 0.2s ease-in-out;
+		}
+
+		button:hover {
+			background-color: #007f00;
+		}
+
+		.result {
+			display: none;
+			margin-top: 20px;
+			font-size: 24px;
+			color: #fff;
+			text-align: center;
+		}
+
+		.result img {
+			max-width: 50vw;
+			width : 49vw;
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+<body>
+
+
+	<div class="container">
+		<form onsubmit="return checkPassword()">
+			<label for="password">Mot de passe:</label>
+			<input type="password" id="password" name="password" required>
+			<button type="submit">Vérifier</button>
+		</form>
+		<div class="result" id="result">
+			<img src="Pic/vraivrai.gif" alt="Mot de passe correct">
+			<p style=" font-family: Arial, Helvetica, sans-serif" >Bon d'accord, entrez !</p>
+		</div>
+		<div class="result" id="error">
+			<img src="Pic/fauxfaux.gif" alt="Mot de passe incorrect">
+			<p style=" font-family: Arial, Helvetica, sans-serif">Non patience, patience ! Regardez...</p>
+		</div>
+	</div>
+	<script>
+		function checkPassword() {
+			var password = document.getElementById("password").value;
+			if (password == "mcb1fn1gbfctibs") {
+				document.getElementById("result").style.display = "block";
+				document.getElementById("error").style.display = "none";
+			} else {
+				document.getElementById("result").style.display = "none";
+				document.getElementById("error").style.display = "block";
+			}
+			return false;
+		}
+	</script>
+
+	<canvas id="canvas"></canvas>
+	<script>
+		var canvas = document.getElementById('canvas');
+		var context = canvas.getContext('2d');
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+
+		// Configuration
+		var ballCount = 50; // Nombre de billes
+		var ballMinSize = 1; // Taille minimale des billes
+		var ballMaxSize = 5; // Taille maximale des billes
+		var ballMinSpeed = 0.5; // Vitesse minimale des billes
+		var ballMaxSpeed = 2; // Vitesse maximale des billes
+		var lineDistance = 100; // Distance maximale entre les billes reliées
+
+		// Créer les billes
+		var balls = [];
+		for (var i = 0; i < ballCount; i++) {
+			var ball = {
+				x: Math.random() * canvas.width,
+				y: Math.random() * canvas.height,
+				size: Math.random() * (ballMaxSize - ballMinSize) + ballMinSize,
+				speedX: Math.random() * (ballMaxSpeed - ballMinSpeed) + ballMinSpeed,
+				speedY: Math.random() * (ballMaxSpeed - ballMinSpeed) + ballMinSpeed,
+				color: 'white'
+			};
+			balls.push(ball);
+		}
+
+		// Dessiner les billes et les relier
+		function draw() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			for (var i = 0; i < balls.length; i++) {
+				var ball = balls[i];
+
+				// Déplacer les billes
+				ball.x += ball.speedX;
+				ball.y += ball.speedY;
+
+				// Rebondir sur les bords
+				if (ball.x < ball.size || ball.x > canvas.width - ball.size) {
+					ball.speedX = -ball.speedX;
+				}
+				if (ball.y < ball.size || ball.y > canvas.height - ball.size) {
+					ball.speedY = -ball.speedY;
+				}
+
+				// Dessiner la bille
+				context.beginPath();
+				context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+				context.fillStyle = ball.color;
+				context.fill();
+
+				// Relier les billes
+				for (var j = i + 1; j < balls.length; j++) {
+					var ball2 = balls[j];
+					var distance = Math.sqrt(Math.pow(ball.x - ball2.x, 2) + Math.pow(ball.y - ball2.y, 2));
+					if (distance < lineDistance) {
+						context.beginPath();
+						context.moveTo(ball.x, ball.y);
+						context.lineTo(ball2.x, ball2.y);
+						context.strokeStyle = 'white';
+						context.lineWidth = (lineDistance - distance) / 20;
+						context.stroke();
+					}
+				}
+			}
+			requestAnimationFrame(draw);
+		}
+		draw();
+	</script>
+</body>
+</html>
