@@ -3,7 +3,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link href="cours.css" rel="stylesheet" media="all" type="text/css">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thème 2 - Activité 4 - Quatrième</title>
+<title>Reproduction externe</title>
 
 <style>
 * {box-sizing: border-box}
@@ -18,6 +18,10 @@ img {vertical-align: middle;}
   margin: auto;
   margin-top:40px;
 }
+
+
+.center {width: auto; }
+
 
 /* Next & previous buttons */
 .prev, .next {
@@ -91,7 +95,10 @@ img {vertical-align: middle;}
  100% { color: #ffffff; }
 }
 
-
+@keyframes glow{
+  from{text-shadow:0px 0px 5px #fff,0px 0px 5px #614ad3;}
+  to{text-shadow:0px 0px 20px #fff,0px 0px 20px #614ad3;}
+}
 /* Fading animation */
 .fade {
   -webkit-animation-name: fade;
@@ -219,7 +226,7 @@ function unhover(element) {
   element.setAttribute('src', 'Pic/RC2.png');
 }
 </script>
-<a href="chap4t2.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:-80px; margin-left:30px"/></a>
+<a href="4T2A5.html"><img src="Pic/RC2.png" onmouseover="hover(this);" onmouseout="unhover(this);" width="126px" height="50px" style="margin-top:-80px; margin-left:30px"/></a>
 
 <script>
 function openNav() {
@@ -260,110 +267,36 @@ function topFunction() {
 }
 </script>
 <!-- C'est la fin du scroll to top script -->
-<div class="slideshow-container">
 
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a41.webp" style="width:100%">
-  <a href="Cours/College/4/T2A4/4e_T2_A4X3.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Fiche activité</h1></img></a>
-
-</div>
-
-
-
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a42.webp" style="width:100%">
-
-</div>
-
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a43.webp" style="width:100%">
-
-</div>
-
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a44.webp" style="width:100%">
-
-</div>
-
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a45.webp" style="width:100%">
-
-</div>
-
-<div class="mySlides fade">
-  <img src="Pic/COLLEGE/4/T2A4/f4t2a46.webp" style="width:100%">
-  <a href="Cours/College/4/T2A4/[C]4_T2_A4.pdf" download><img src="Pic/link.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Leçon</h1></img></a>
-
-  <a href="Z_PHOTOSYNTHESE_4E_T2_A4.html"><img src="Pic/WTF.png" height="25px" width="24px" alt="Lien" /><h1 style="display: inline ; animation: color-change 8s infinite">Photosynthèse</h1></img></a>
-
-  <script type = "text/javascript">
-        function pic2()
-        {
-            document.getElementById("img2").src = "Pic/COLLEGE/4/T2A4/MEMEINTERSTELLAR.jpg";
-        }
-     </script>
-
-    <img id = "img2" style="width:70%"/> <input type="button" style="   width: 100px;
-       font-size: 18px;
-       padding: 10px;
-       border: none;
-       background: rgba(0,0,0,0.5);
-       color: #fff;
-       cursor: pointer; " value="MEME" onclick="pic2()"/>
-</div>
-
-
-
-<a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-<a class="next" onclick="plusSlides(1)">&#10095;</a>
-
-</div>
 <br>
 
-<div style="text-align:center">
-  <span class="dot" onclick="currentSlide(1)"></span>
-  <span class="dot" onclick="currentSlide(2)"></span>
-    <span class="dot" onclick="currentSlide(3)"></span>
-      <span class="dot" onclick="currentSlide(4)"></span>
-          <span class="dot" onclick="currentSlide(5)"></span>
-              <span class="dot" onclick="currentSlide(6)"></span>
 
 
+<video class="center" controls="">
+
+  <source src="Vid/ANECDOTES/REPRODUCTIONEXT.mp4" type="video/mp4">
+
+</video>
+
+<p style = " font-size:2rem;
+  text-align:center;
+  color:black;
+  font-family: 'Merienda';
+  text-transform:uppercase;
+  animation-name:glow;
+  animation-duration:1s;
+  animation-iteration-count:infinite;
+  animation-direction:alternate;">La reproduction externe.</p>
+
+</br>
 
 
+    <p style="font-size:1.3rem;
+      text-align:center;
 
+      color:black;
+      font-family: 'Merienda'"></p>
 
-
-</div>
-
-<script>
-var slideIndex = 1;
-showSlides(slideIndex);
-
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  var i;
-  var slides = document.getElementsByClassName("mySlides");
-  var dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";
-  }
-  for (i = 0; i < dots.length; i++) {
-      dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";
-  dots[slideIndex-1].className += " active";
-}
-</script>
 
 
 </body>
