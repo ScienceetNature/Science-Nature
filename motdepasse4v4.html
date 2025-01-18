@@ -88,18 +88,18 @@ Your browser does not support the audio element.
 			<button type="submit">Vérifier</button>
 		</form>
 		<div class="result" id="result">
-			<img src="Pic/vraivrai.gif" alt="Mot de passe correct">
-			<p style=" font-family: Arial, Helvetica, sans-serif" >Bon d'accord, entrez !</p>
+			<img src="Pic/victoire.gif" alt="Mot de passe correct">
+			<p style=" font-family: Arial, Helvetica, sans-serif" ></p>
 		</div>
 		<div class="result" id="error">
-			<img src="Pic/fauxfaux.gif" alt="Mot de passe incorrect">
-			<p style=" font-family: Arial, Helvetica, sans-serif">Non patience, patience ! Regardez...</p>
+			<img src="Pic/wrongTRUMP.gif" alt="Mot de passe incorrect">
+			<p style=" font-family: Arial, Helvetica, sans-serif">Try again...</p>
 		</div>
 	</div>
 	<script>
 		function checkPassword() {
 			var password = document.getElementById("password").value;
-			if (password == "nnvbqfvsfso") {
+			if (password == "nnvbsfvsfso") {
 				document.getElementById("result").style.display = "block";
 				document.getElementById("error").style.display = "none";
 			} else {
