@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Page de mot de passe</title>
+  <style>
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #passwordForm {
+      transition: opacity 0.5s ease;
+    }
+
+    #passwordForm.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    input[type=password] {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #fff;
+      background-color: #222;
+      outline: none;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #2E8B57;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #007f00;
+    }
+
+    .result {
+      display: none;
+      margin-top: 20px;
+      font-size: 24px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .result video {
+      max-width: 50vw;
+      width: 49vw;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <form onsubmit="return checkPassword()" id="passwordForm">
+      <label for="password">Mot de passe:</label>
+      <input type="password" id="password" name="password" required>
+      <button type="submit" id="submitButton">Vérifier</button>
+    </form>
+
+    <div class="result" id="result">
+      <video id="videoSuccess" autoplay loop muted></video>
+      <p>Bon d'accord, entrez !</p>
+    </div>
+
+    <div class="result" id="error">
+      <video id="videoError" autoplay loop muted></video>
+      <p>Non patience, patience ! Regardez...</p>
+    </div>
+  </div>
+
+  <script>
+    let isRetryMode = false;
+    const maxSuccess = 1; // nombre de vidéos vraies : vraivrai1.mp4 à vraivrai3.mp4
+    const maxError = 1;   // nombre de vidéos fausses : fauxfaux1.mp4 à fauxfaux3.mp4
+
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * max) + 1;
+    }
+
+    function checkPassword() {
+      const passwordInput = document.getElementById("password");
+      const password = passwordInput.value;
+      const resultDiv = document.getElementById("result");
+      const errorDiv = document.getElementById("error");
+      const button = document.getElementById("submitButton");
+      const videoSuccess = document.getElementById("videoSuccess");
+      const videoError = document.getElementById("videoError");
+      const form = document.getElementById("passwordForm");
+
+      if (isRetryMode) {
+        passwordInput.value = "";
+        resultDiv.style.display = "none";
+        errorDiv.style.display = "none";
+        videoSuccess.pause();
+        videoSuccess.currentTime = 0;
+        videoError.pause();
+        videoError.currentTime = 0;
+        form.classList.remove("hidden");
+        button.textContent = "Vérifier";
+        isRetryMode = false;
+        return false;
+      }
+
+      form.classList.add("hidden"); // cacher le champ mot de passe
+
+      if (password === "pztnqles") {
+        const randomIndex = getRandomInt(maxSuccess);
+        const videoPath = `Pic/vraivrai${randomIndex}.mp4`;
+        videoSuccess.src = videoPath;
+        videoSuccess.load();
+        videoSuccess.play();
+        resultDiv.style.display = "block";
+        errorDiv.style.display = "none";
+      } else {
+        const randomIndex = getRandomInt(maxError);
+        const videoPath = `Pic/fauxfaux${randomIndex}.mp4`;
+        videoError.src = videoPath;
+        videoError.load();
+        videoError.play();
+        resultDiv.style.display = "none";
+        errorDiv.style.display = "block";
+      }
+
+      button.textContent = "Réessayer";
+      isRetryMode = true;
+      return false;
+    }
+  </script>
+
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const balls = [];
+    const ballCount = 50;
+    const lineDistance = 100;
+
+    for (let i = 0; i < ballCount; i++) {
+      balls.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 4 + 1,
+        speedX: Math.random() * 1.5 + 0.5,
+        speedY: Math.random() * 1.5 + 0.5,
+        color: 'white'
+      });
+    }
+
+    function draw() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < balls.length; i++) {
+        const b = balls[i];
+        b.x += b.speedX;
+        b.y += b.speedY;
+
+        if (b.x < b.size || b.x > canvas.width - b.size) b.speedX = -b.speedX;
+        if (b.y < b.size || b.y > canvas.height - b.size) b.speedY = -b.speedY;
+
+        context.beginPath();
+        context.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+        context.fillStyle = b.color;
+        context.fill();
+
+        for (let j = i + 1; j < balls.length; j++) {
+          const b2 = balls[j];
+          const d = Math.hypot(b.x - b2.x, b.y - b2.y);
+          if (d < lineDistance) {
+            context.beginPath();
+            context.moveTo(b.x, b.y);
+            context.lineTo(b2.x, b2.y);
+            context.strokeStyle = 'white';
+            context.lineWidth = (lineDistance - d) / 20;
+            context.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>
