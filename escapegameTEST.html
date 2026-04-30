@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>EscapeGame</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+    :root {
+      --bg: #000;
+      --box-bg: rgba(255,255,255,0.05);
+      --box-border: rgba(255,255,255,0.25);
+      --box-text: #fff;
+      --correct: #00e676;
+      --wrong: #ff1744;
+      --btn-bg: #2E8B57;
+      --btn-hover: #007f00;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      overflow: hidden;
+      font-family: 'Share Tech Mono', monospace;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* ── Audio player top-right ── */
+    #audioPlayer {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 30px;
+      padding: 6px 14px;
+      backdrop-filter: blur(6px);
+    }
+    #audioPlayer button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 0;
+      color: #fff;
+      transition: transform 0.15s;
+    }
+    #audioPlayer button:hover { transform: scale(1.2); }
+    #audioPlayer input[type=range] {
+      width: 80px;
+      accent-color: var(--correct);
+      cursor: pointer;
+    }
+
+    /* ── Centre container ── */
+    .scene {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    /* ── Title ── */
+    .title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.4rem, 3vw, 2.4rem);
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-shadow: 0 0 30px rgba(255,255,255,0.2);
+      user-select: none;
+    }
+
+    /* ── Password box row ── */
+    .pw-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .numbers-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding: 0 44px 0 0; /* offset for the eye */
+    }
+    .num-label {
+      width: 52px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+
+    .boxes-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .letter-box {
+      width: 52px;
+      height: 62px;
+      background: var(--box-bg);
+      border: 2px solid var(--box-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 26px;
+      color: var(--box-text);
+      cursor: text;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .letter-box.active {
+      border-color: rgba(255,255,255,0.7);
+      box-shadow: 0 0 14px rgba(255,255,255,0.15);
+    }
+    .letter-box.correct {
+      border-color: var(--correct);
+      background: rgba(0,230,118,0.12);
+      box-shadow: 0 0 18px rgba(0,230,118,0.35);
+    }
+    .letter-box.wrong {
+      border-color: var(--wrong);
+      background: rgba(255,23,68,0.12);
+      box-shadow: 0 0 18px rgba(255,23,68,0.3);
+    }
+    /* flash overlay for the animation */
+    .letter-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      border-radius: 6px;
+      transition: background 0.25s;
+    }
+    .letter-box.flash-correct::after { background: rgba(0,230,118,0.45); }
+    .letter-box.flash-wrong::after   { background: rgba(255,23,68,0.45); }
+
+    /* Hidden real input (for mobile keyboards etc.) */
+    #hiddenInput {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px; height: 1px;
+    }
+
+    /* Eye toggle */
+    .eye-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      color: rgba(255,255,255,0.45);
+      margin-left: 8px;
+      padding: 4px;
+      transition: color 0.2s, transform 0.15s;
+      line-height: 1;
+    }
+    .eye-btn:hover { color: rgba(255,255,255,0.9); transform: scale(1.1); }
+
+    /* ── Verify / Retry button ── */
+    .check-btn {
+      padding: 12px 44px;
+      background: var(--btn-bg);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      text-transform: uppercase;
+      box-shadow: 0 4px 20px rgba(46,139,87,0.3);
+    }
+    .check-btn:hover {
+      background: var(--btn-hover);
+      box-shadow: 0 4px 28px rgba(0,127,0,0.5);
+    }
+    .check-btn:active { transform: scale(0.96); }
+
+    /* ── Video overlay ── */
+    #videoOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 5; /* behind scene (z10) but above canvas (z0) */
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.0);
+    }
+    #videoOverlay video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      opacity: 0.88;
+    }
+
+    /* Fade transitions for video */
+    #videoOverlay.fade-in  { animation: vFadeIn  0.4s ease forwards; }
+    #videoOverlay.fade-out { animation: vFadeOut 0.5s ease forwards; }
+    @keyframes vFadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes vFadeOut { from{opacity:1} to{opacity:0} }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ AUDIO PLAYER ═══════════════ -->
+<div id="audioPlayer">
+  <button id="playPauseBtn" title="Play/Pause">▶</button>
+  <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7">
+  <span id="trackLabel" style="color:rgba(255,255,255,0.5);font-size:12px;">🎵</span>
+</div>
+<audio id="bgMusic" preload="none">
+  <source src="Vid/abysse.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ═══════════════ VIDEO OVERLAY ═══════════════ -->
+<div id="videoOverlay">
+  <video id="theVideo" preload="none" playsinline></video>
+</div>
+
+<!-- ═══════════════ MAIN SCENE ═══════════════ -->
+<div class="scene">
+  <div class="title">Mot de passe</div>
+
+  <div class="pw-wrapper" id="pwWrapper">
+    <!-- Numbers row & boxes row built by JS -->
+  </div>
+
+  <button class="check-btn" id="checkBtn" onclick="handleCheck()">Vérifier</button>
+</div>
+
+<!-- Hidden input -->
+<input type="text" id="hiddenInput" autocomplete="off" autocorrect="off" spellcheck="false">
+
+<!-- ═══════════════ CANVAS BACKGROUND ═══════════════ -->
+<canvas id="canvas"></canvas>
+
+<!-- ═══════════════ SCRIPTS ═══════════════ -->
+<script>
+/* ════════════════════════════════════════════════
+   ★ CONFIGURATION — modifiez uniquement ici ★
+   ════════════════════════════════════════════════ */
+const PASSWORD = "nmaclf";          // ← changez le mot de passe ici
+const VIDEO_SUCCESS = "Pic/vraivrai.mp4";
+const VIDEO_ERROR   = "Pic/fauxfaux.mp4";
+/* ════════════════════════════════════════════════ */
+
+// ── State ──
+let revealed    = false;
+let isVerifying = false;
+let isResult    = false;
+let typedChars  = [];
+
+// ── Build UI ──
+(function buildBoxes() {
+  const wrapper = document.getElementById('pwWrapper');
+  const numRow  = document.createElement('div');
+  numRow.className = 'numbers-row';
+  const boxRow  = document.createElement('div');
+  boxRow.className = 'boxes-row';
+
+  for (let i = 0; i < PASSWORD.length; i++) {
+    // number label
+    const lbl = document.createElement('div');
+    lbl.className = 'num-label';
+    lbl.textContent = i + 1;
+    numRow.appendChild(lbl);
+
+    // letter box
+    const box = document.createElement('div');
+    box.className = 'letter-box';
+    box.id = 'box-' + i;
+    box.dataset.index = i;
+    box.addEventListener('click', () => focusBox(i));
+    boxRow.appendChild(box);
+
+    typedChars.push('');
+  }
+
+  // Eye button at the end of boxRow
+  const eyeBtn = document.createElement('button');
+  eyeBtn.className = 'eye-btn';
+  eyeBtn.id = 'eyeBtn';
+  eyeBtn.title = 'Révéler / masquer';
+  eyeBtn.textContent = '👁';
+  eyeBtn.onclick = toggleReveal;
+  boxRow.appendChild(eyeBtn);
+
+  wrapper.appendChild(numRow);
+  wrapper.appendChild(boxRow);
+
+  focusBox(0);
+})();
+
+function getBox(i) { return document.getElementById('box-' + i); }
+
+let activeIndex = 0;
+function focusBox(i) {
+  if (isVerifying || isResult) return;
+  if (i < 0) i = 0;
+  if (i >= PASSWORD.length) i = PASSWORD.length - 1;
+  activeIndex = i;
+  document.querySelectorAll('.letter-box').forEach((b,j) => {
+    b.classList.toggle('active', j === i);
+  });
+  document.getElementById('hiddenInput').focus();
+}
+
+// ── Keyboard capture ──
+document.getElementById('hiddenInput').addEventListener('keydown', onKey);
+document.addEventListener('keydown', e => {
+  if (isVerifying || isResult) return;
+  if (e.key !== 'Tab') document.getElementById('hiddenInput').focus();
+});
+
+function onKey(e) {
+  if (isVerifying || isResult) return;
+
+  if (e.key === 'Enter') { handleCheck(); return; }
+
+  if (e.key === 'Backspace') {
+    if (typedChars[activeIndex] !== '') {
+      typedChars[activeIndex] = '';
+      renderBox(activeIndex);
+    } else if (activeIndex > 0) {
+      activeIndex--;
+      typedChars[activeIndex] = '';
+      renderBox(activeIndex);
+      focusBox(activeIndex);
+    }
+    e.preventDefault(); return;
+  }
+
+  if (e.key === 'ArrowLeft' && activeIndex > 0) {
+    focusBox(activeIndex - 1); e.preventDefault(); return;
+  }
+  if (e.key === 'ArrowRight' && activeIndex < PASSWORD.length - 1) {
+    focusBox(activeIndex + 1); e.preventDefault(); return;
+  }
+
+  if (e.key.length === 1) {
+    typedChars[activeIndex] = e.key;
+    renderBox(activeIndex);
+    if (activeIndex < PASSWORD.length - 1) focusBox(activeIndex + 1);
+    e.preventDefault();
+  }
+}
+
+function renderBox(i) {
+  const box = getBox(i);
+  const ch  = typedChars[i];
+  if (ch === '') {
+    box.textContent = '';
+  } else {
+    box.textContent = revealed ? ch : '•';
+  }
+}
+
+function renderAllBoxes() {
+  for (let i = 0; i < PASSWORD.length; i++) renderBox(i);
+}
+
+// ── Eye / reveal ──
+function toggleReveal() {
+  revealed = !revealed;
+  document.getElementById('eyeBtn').textContent = revealed ? '🙈' : '👁';
+  renderAllBoxes();
+}
+
+// ── Verify ──
+function handleCheck() {
+  if (isVerifying) return;
+
+  if (isResult) {
+    resetGame(); return;
+  }
+
+  isVerifying = true;
+  document.getElementById('checkBtn').disabled = true;
+
+  const typed = typedChars.join('');
+  const win   = typed.toLowerCase() === PASSWORD.toLowerCase();
+  const delay = Math.min(2800, 3000) / PASSWORD.length; // spread over ≤3s
+
+  // Animate boxes one by one
+  for (let i = 0; i < PASSWORD.length; i++) {
+    (function(idx) {
+      setTimeout(() => {
+        const box = getBox(idx);
+        const ok  = typedChars[idx].toLowerCase() === PASSWORD[idx].toLowerCase();
+        // flash
+        box.classList.add(ok ? 'flash-correct' : 'flash-wrong');
+        setTimeout(() => {
+          box.classList.remove('flash-correct', 'flash-wrong');
+          box.classList.add(ok ? 'correct' : 'wrong');
+        }, 200);
+
+        // After last box → show video
+        if (idx === PASSWORD.length - 1) {
+          setTimeout(() => {
+            showVideo(win);
+          }, 400);
+        }
+      }, idx * delay);
+    })(i);
+  }
+
+  // confetti balls if win
+  if (win) setTimeout(() => colorBalls(true), 200);
+}
+
+// ── Video ──
+function showVideo(win) {
+  const overlay = document.getElementById('videoOverlay');
+  const vid     = document.getElementById('theVideo');
+  vid.src       = win ? VIDEO_SUCCESS : VIDEO_ERROR;
+  overlay.style.display = 'flex';
+  overlay.classList.add('fade-in');
+
+  vid.play().catch(()=>{});
+
+  vid.onended = () => {
+    overlay.classList.remove('fade-in');
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('fade-out');
+      vid.src = '';
+    }, 500);
+    // Switch button to Recommencer
+    const btn = document.getElementById('checkBtn');
+    btn.textContent = 'Recommencer';
+    btn.disabled = false;
+    isVerifying = false;
+    isResult = true;
+  };
+}
+
+// ── Reset ──
+function resetGame() {
+  typedChars = Array(PASSWORD.length).fill('');
+  for (let i = 0; i < PASSWORD.length; i++) {
+    const box = getBox(i);
+    box.className = 'letter-box';
+    box.textContent = '';
+  }
+  revealed = false;
+  document.getElementById('eyeBtn').textContent = '👁';
+  document.getElementById('checkBtn').textContent = 'Vérifier';
+  document.getElementById('checkBtn').disabled = false;
+  isVerifying = false;
+  isResult = false;
+  colorBalls(false);
+  focusBox(0);
+}
+
+// ── Audio player ──
+const bgMusic     = document.getElementById('bgMusic');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const volSlider   = document.getElementById('volumeSlider');
+let musicPlaying  = false;
+
+bgMusic.volume = parseFloat(volSlider.value);
+
+playPauseBtn.addEventListener('click', () => {
+  if (musicPlaying) {
+    bgMusic.pause();
+    playPauseBtn.textContent = '▶';
+    musicPlaying = false;
+  } else {
+    bgMusic.play().catch(()=>{});
+    playPauseBtn.textContent = '⏸';
+    musicPlaying = true;
+  }
+});
+
+volSlider.addEventListener('input', () => {
+  bgMusic.volume = parseFloat(volSlider.value);
+});
+
+bgMusic.addEventListener('ended', () => {
+  bgMusic.currentTime = 0;
+  bgMusic.play().catch(()=>{});
+});
+</script>
+
+<!-- ═══════════════ CANVAS ANIMATION ═══════════════ -->
+<script>
+  var canvas  = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  var ballCount   = 50;
+  var ballMinSize = 1;
+  var ballMaxSize = 5;
+  var ballMinSpeed = 0.5;
+  var ballMaxSpeed = 2;
+  var lineDistance = 100;
+  var colorMode = false;
+
+  var hues = [];
+  var balls = [];
+  for (var i = 0; i < ballCount; i++) {
+    hues.push(Math.random() * 360);
+    balls.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size:   Math.random() * (ballMaxSize - ballMinSize) + ballMinSize,
+      speedX: (Math.random() * (ballMaxSpeed - ballMinSpeed) + ballMinSpeed) * (Math.random() < 0.5 ? 1 : -1),
+      speedY: (Math.random() * (ballMaxSpeed - ballMinSpeed) + ballMinSpeed) * (Math.random() < 0.5 ? 1 : -1),
+    });
+  }
+
+  function colorBalls(on) { colorMode = on; }
+
+  function draw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (var i = 0; i < balls.length; i++) {
+      var ball = balls[i];
+      ball.x += ball.speedX;
+      ball.y += ball.speedY;
+
+      if (ball.x < ball.size || ball.x > canvas.width  - ball.size) ball.speedX = -ball.speedX;
+      if (ball.y < ball.size || ball.y > canvas.height - ball.size) ball.speedY = -ball.speedY;
+
+      if (colorMode) hues[i] = (hues[i] + 0.5) % 360;
+      var col = colorMode ? 'hsl(' + hues[i] + ',100%,65%)' : 'white';
+
+      context.beginPath();
+      context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+      context.fillStyle = col;
+      context.fill();
+
+      for (var j = i + 1; j < balls.length; j++) {
+        var b2 = balls[j];
+        var dist = Math.hypot(ball.x - b2.x, ball.y - b2.y);
+        if (dist < lineDistance) {
+          context.beginPath();
+          context.moveTo(ball.x, ball.y);
+          context.lineTo(b2.x, b2.y);
+          var col2 = colorMode ? 'hsl(' + ((hues[i]+hues[j])/2) + ',90%,60%)' : 'white';
+          context.strokeStyle = col2;
+          context.lineWidth = (lineDistance - dist) / 20;
+          context.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
+</body>
+</html>
