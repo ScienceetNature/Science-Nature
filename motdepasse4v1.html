@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>EscapeGame - Sport - V1</title>
+  <title>Sport V1</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
 
@@ -124,7 +124,8 @@
       position: relative;
       overflow: hidden;
       user-select: none;
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
     }
     .letter-box.active {
       border-color: rgba(255,255,255,0.7);
@@ -151,12 +152,13 @@
     .letter-box.flash-correct::after { background: rgba(0,230,118,0.5); }
     .letter-box.flash-wrong::after   { background: rgba(255,23,68,0.5); }
 
-    /* The real input — invisible, sits over all boxes */
+    /* The real input — largeur nulle, repositionné sur la case active */
     #pwInput {
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
       height: 100%;
-      opacity: 0.01; /* not 0 — some browsers skip 0-opacity inputs */
+      width: 52px;
+      opacity: 0.01;
       cursor: text;
       font-size: 16px;
       border: none;
@@ -165,7 +167,6 @@
       z-index: 20;
       caret-color: transparent;
       color: transparent;
-      /* width set dynamically by JS */
     }
 
     /* Eye button */
@@ -287,6 +288,14 @@ for (let i = 0; i < LEN; i++) {
   const box = document.createElement('div');
   box.className = 'letter-box';
   box.id = 'box-' + i;
+  box.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (isVerifying || isResult) return;
+    setActive(i);
+    pwInput.value = typedChars[i];
+    pwInput.focus();
+    pwInput.select();
+  });
   boxesRow.insertBefore(box, eyeBtn);
 }
 
@@ -299,8 +308,6 @@ pwInput.autocomplete = 'off';
 pwInput.setAttribute('autocorrect', 'off');
 pwInput.setAttribute('autocapitalize', 'none');
 pwInput.spellcheck  = false;
-// Width covers exactly the boxes (not the eye button)
-pwInput.style.width = (LEN * BOX_W + (LEN - 1) * GAP) + 'px';
 boxesRow.insertBefore(pwInput, eyeBtn);
 
 // ── Focus management ──
@@ -310,14 +317,17 @@ function grabFocus() {
 
 // Click anywhere on the widget → focus input
 document.getElementById('pwWrapper').addEventListener('mousedown', (e) => {
-  if (!e.target.closest('.eye-btn')) {
-    e.preventDefault(); // prevent focus jumping to body first
+  if (!e.target.closest('.eye-btn') && !e.target.closest('.letter-box')) {
+    e.preventDefault();
     grabFocus();
   }
 });
 
 // Initial focus after DOM is ready
-setTimeout(grabFocus, 100);
+setTimeout(() => {
+  pwInput.value = typedChars[0];
+  grabFocus();
+}, 100);
 
 // ── Helpers ──
 function getBox(i) { return document.getElementById('box-' + i); }
@@ -327,6 +337,8 @@ function setActive(i) {
     b.classList.toggle('active', j === i);
   });
   activeIndex = i;
+  // Repositionner l'input invisible sur la case active
+  pwInput.style.left = (i * (BOX_W + GAP)) + 'px';
 }
 
 function renderBox(i) {
@@ -342,32 +354,56 @@ function renderAll() {
 pwInput.addEventListener('input', () => {
   if (isVerifying || isResult) { pwInput.value = ''; return; }
 
-  const val   = pwInput.value.slice(0, LEN);
-  pwInput.value = val; // enforce max length
+  const val = pwInput.value;
 
-  typedChars = Array(LEN).fill('');
-  for (let i = 0; i < val.length; i++) typedChars[i] = val[i];
+  if (val === '') {
+    // Effacement
+    typedChars[activeIndex] = '';
+    renderBox(activeIndex);
+    if (activeIndex > 0) {
+      setActive(activeIndex - 1);
+      pwInput.value = typedChars[activeIndex];
+      pwInput.select();
+    } else {
+      pwInput.value = '';
+    }
+    return;
+  }
 
-  const pos = pwInput.selectionStart != null ? pwInput.selectionStart : val.length;
-  setActive(Math.min(Math.max(pos - 1, 0), LEN - 1));
-  renderAll();
+  // Garder uniquement le dernier caractère tapé (au cas où)
+  const ch = val[val.length - 1];
+  typedChars[activeIndex] = ch;
+  renderBox(activeIndex);
+
+  // Avancer à la case suivante
+  if (activeIndex < LEN - 1) {
+    setActive(activeIndex + 1);
+    pwInput.value = typedChars[activeIndex];
+    pwInput.select();
+  } else {
+    pwInput.value = ch;
+    pwInput.select();
+  }
 });
 
 // ── Keydown: Enter + arrows ──
 pwInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); handleCheck(); return; }
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-    setTimeout(() => {
-      const pos = pwInput.selectionStart;
-      setActive(Math.min(Math.max((pos || 0), 0), LEN - 1));
-    }, 0);
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    if (activeIndex > 0) { setActive(activeIndex - 1); pwInput.value = typedChars[activeIndex]; pwInput.select(); }
   }
-});
-
-// Track cursor moves
-pwInput.addEventListener('click', () => {
-  const pos = pwInput.selectionStart || 0;
-  setActive(Math.min(pos, LEN - 1));
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    if (activeIndex < LEN - 1) { setActive(activeIndex + 1); pwInput.value = typedChars[activeIndex]; pwInput.select(); }
+  }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    typedChars[activeIndex] = '';
+    renderBox(activeIndex);
+    pwInput.value = '';
+    if (activeIndex > 0) { setActive(activeIndex - 1); pwInput.value = typedChars[activeIndex]; pwInput.select(); }
+  }
 });
 
 // ── Eye button ──
@@ -410,7 +446,7 @@ function handleCheck() {
     })(i);
   }
 
-if (win) setTimeout(() => colorBalls(true), delay * (LEN - 1) + 220);
+  if (win) colorBalls(true);
 }
 
 // ── Video ──
@@ -465,8 +501,9 @@ function resetGame() {
   isVerifying = false;
   isResult = false;
   setActive(0);
+  pwInput.value = '';
   colorBalls(false);
-  grabFocus();
+  pwInput.focus();
 }
 
 // ── Audio ──
