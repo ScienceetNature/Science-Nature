@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plongée dans les Abysses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- STYLES GENERAUX --- */
+        :root {
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Montserrat', sans-serif;
+            --color-sky: #e2f1f8;
+            --color-sea-top: #0284c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* On cache le curseur par défaut pour le remplacer par le combo sous-marin + viseur */
+            cursor: none !important;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: #ffffff;
+            overflow-x: hidden;
+            background-color: #000000;
+            height: 50000px; /* Ajusté dynamiquement par le JS */
+        }
+
+        /* --- SURFACE (CIEL MINIMALISTE) --- */
+        .surface {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            background-color: var(--color-sky);
+            color: #0f172a;
+        }
+
+        .surface::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #ffffff;
+            z-index: 11;
+        }
+
+        .surface h1 {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+
+        .surface p {
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- DEGRADE DE LUMIERE --- */
+        .ocean-light-glow {
+            position: absolute;
+            top: 100vh;
+            left: 0;
+            width: 100%;
+            height: 12000px;
+            background: linear-gradient(to bottom,
+                var(--color-sea-top) 0%,
+                #0c356a 20%,
+                #011627 50%,
+                #000000 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- SOUS-MARIN ET CURSEUR EXTENSION --- */
+        #sub-pilot-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 210px;  /* Taille X1.5 globale */
+            height: 120px;
+            pointer-events: none; /* Laisse passer les clics à travers le container */
+            z-index: 100;
+        }
+
+        .sub-image {
+            position: absolute;
+            left: 25px;   /* Valeur par défaut initiale */
+            top: 20px;    /* Valeur par défaut initiale */
+            width: 210px; /* Agrandissement X1.5 de l'image du sous-marin */
+            height: auto;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+
+        /* Le point de clic précis (Viseur) placé au-dessus et à gauche du sous-marin */
+        .sub-crosshair {
+            position: absolute;
+            left: 0;
+            top: 0;
+            transform: translate(-50%, -50%); /* Centrage parfait et absolu sur la pointe réelle de la souris */
+            width: 12px;
+            height: 12px;
+            background-color: #2dd4bf;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #2dd4bf;
+        }
+
+        /* --- CONTROLEUR AUDIO DESIGN ALIGNÉ ET PLACÉ EN HAUT --- */
+        .audio-control-panel {
+            position: fixed;
+            left: 30px;
+            top: 40px; /* Placé le plus haut possible sur la page */
+            width: 40px; /* Même largeur pour un alignement parfait sur l'axe */
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .volume-pill-container {
+            width: 24px;
+            height: 130px;
+            background-color: #141619;
+            border: 1px solid #22252a;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .volume-track-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%; /* Géré par le JS */
+            background: linear-gradient(to top, #005f73, #0a9396, #2dd4bf); /* Dégradé nuances bleu turquoise */
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
+            transition: height 0.05s linear;
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            outline: none;
+            color: #94a3b8;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .audio-btn:hover { color: #2dd4bf; transform: scale(1.1); }
+        .audio-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* --- INTERFACE TEXTUELLE FIXE (UI) --- */
+        .depth-counter {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            font-size: 2.5rem;
+            font-weight: 600;
+            z-index: 80;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        body.submerged .depth-counter { opacity: 1; }
+        .depth-counter span { font-size: 1.2rem; margin-left: 5px; opacity: 0.7; }
+
+        .depth-line {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            right: 150px;
+            width: 2px;
+            border-left: 2px dashed rgba(255, 255, 255, 0.15);
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        body.submerged .depth-line { opacity: 1; }
+
+        .zone-indicator {
+            position: fixed;
+            left: 30px;
+            bottom: 40px;
+            width: 40px; /* Même largeur pour un alignement d'axe parfait avec le panel audio */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            opacity: 0;
+            z-index: 80;
+            font-weight: 600;
+            transition: opacity 0.5s;
+        }
+        body.submerged .zone-indicator { opacity: 0.4; }
+
+        /* --- PALIERS DE DESCRIPTION TEXTUELS (STYLE NEAL.FUN) --- */
+        .depth-milestone {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .milestone-title {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: #38bdf8;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .milestone-desc {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            font-weight: 300;
+            line-height: 1.6;
+            opacity: 0.75;
+            color: #f1f5f9;
+        }
+
+        /* --- ANIMAUX --- */
+        .abyss-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 100vh);
+        }
+
+        .animal-card {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 6;
+            animation: swimAnimation 6s ease-in-out infinite;
+        }
+
+        .pos-gauche { left: 12%; }
+        .pos-milieu-gauche { left: 28%; }
+        .pos-milieu { left: 50%; transform: translateX(-50%); }
+        .pos-milieu-droite { right: 28%; }
+        .pos-droite { right: 12%; }
+
+        @keyframes swimAnimation {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1.2deg); }
+        }
+
+        .animal-card img {
+            width: 100%; /* S'adapte à la taille de la carte configurée en JS */
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+            transition: filter 0.3s, transform 0.3s;
+        }
+
+        .animal-card:hover img {
+            filter: drop-shadow(0 0 25px rgba(45, 212, 191, 0.6)) scale(1.04);
+        }
+
+        .animal-name { font-size: 1.1rem; font-weight: 600; margin-top: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+        .animal-latin { font-size: 0.85rem; font-style: italic; opacity: 0.6; margin-top: 2px; }
+        .animal-size { font-size: 0.8rem; opacity: 0.4; margin-top: 2px; }
+
+        /* Tooltip Anecdote */
+        .animal-tooltip {
+            position: absolute;
+            bottom: 100%;
+            background: rgba(9, 10, 11, 0.95);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            width: 260px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            color: #ffffff;
+        }
+        .animal-card:hover .animal-tooltip { opacity: 1; transform: translateY(-10px); }
+
+        /* --- LE FOND DE LA FOSSE --- */
+        .seabed {
+            position: absolute;
+            width: 100%;
+            height: 500px;
+            bottom: 0;
+            left: 0;
+            background: #000000;
+            z-index: 8;
+        }
+
+        .seabed-rocks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #090a0c;
+            clip-path: polygon(0% 45%, 9% 38%, 20% 48%, 31% 33%, 42% 46%, 50% 28%, 61% 42%, 73% 31%, 84% 49%, 93% 36%, 100% 44%, 100% 100%, 0% 100%);
+        }
+
+        .seabed-rocks-front {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111316;
+            clip-path: polygon(0% 55%, 14% 63%, 28% 48%, 43% 58%, 55% 45%, 70% 62%, 82% 51%, 94% 59%, 100% 48%, 100% 100%, 0% 100%);
+            opacity: 0.95;
+        }
+
+        .seabed-marker {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-family: var(--font-title);
+            z-index: 10;
+            width: 90%;
+        }
+
+        .seabed-marker h2 {
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            color: #38bdf8;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .seabed-marker p {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            opacity: 0.5;
+        }
+
+        /* --- BULLES --- */
+        .bubble {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            bottom: -60px;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-110vh) translateX(35px); opacity: 0; }
+        }
+
+        /* --- POPUP MEDIAS (CURSEUR RESTAURÉ) --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Force la réapparition du curseur de la souris à l'ouverture d'une popup/anecdote */
+        .popup-overlay.active, .popup-overlay.active * {
+            cursor: default !important;
+        }
+        .popup-overlay.active .popup-close, .popup-overlay.active button, .popup-overlay.active video {
+            cursor: pointer !important;
+        }
+
+        .popup-overlay.active { opacity: 1; pointer-events: auto; }
+        .popup-content { position: relative; max-width: 85vw; max-height: 85vh; transform: scale(0.9); transition: transform 0.3s ease; }
+        .popup-overlay.active .popup-content { transform: scale(1); }
+        .popup-content img, .popup-content video { max-width: 100%; max-height: 85vh; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .popup-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .surface h1 { font-size: 2.2rem; }
+            .depth-counter { right: 20px; top: 20px; font-size: 1.8rem; }
+            .depth-line { right: 80px; }
+            .zone-indicator { left: 15px; width: 40px; font-size: 0.75rem; bottom: 30px; }
+            .audio-control-panel { left: 15px; width: 40px; top: 20px; bottom: auto; }
+            .seabed-marker h2 { font-size: 1.5rem; }
+            #sub-pilot-container { width: 135px; height: 75px; }
+            .sub-image { width: 135px; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" src="Vid/abysse.mp3" loop></audio>
+
+    <div id="sub-pilot-container">
+        <img src="Images/sousmarin.webp" alt="Sous-marin pilote" class="sub-image">
+        <div class="sub-crosshair"></div>
+    </div>
+
+    <div class="audio-control-panel">
+        <div class="volume-pill-container" id="vol-slider">
+            <div class="volume-track-fill" id="vol-fill"></div>
+        </div>
+        <button class="audio-btn" id="mute-btn" title="Couper/Activer le son">
+            <svg id="speaker-icon" viewBox="0 0 24 24">
+                <path d="M5 9v6h4l5 5V4L9 9H5zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16 4.03v2.02c2.61.81 4.5 3.24 4.5 6.13s-1.89 5.32-4.5 6.13v2.02c3.72-.86 6.5-4.17 6.5-8.15s-2.78-7.29-6.5-8.15z"/>
+            </svg>
+        </button>
+    </div>
+
+    <section class="surface">
+        <h1>Plongée dans les abysses</h1>
+        <p>Déplacez votre souris vers le bas pour commencer la descente...</p>
+    </section>
+
+    <div class="ocean-light-glow"></div>
+
+    <div class="depth-counter"><span id="meter-val">0</span><span>m</span></div>
+    <div class="depth-line"></div>
+    <div class="zone-indicator" id="zone-txt">Zone Épipélagique</div>
+
+    <main class="abyss-container" id="abyss-space">
+
+        <div id="milestones-group"></div>
+
+        <div class="seabed" id="ocean-floor">
+            <div class="seabed-rocks"></div>
+            <div class="seabed-rocks-front"></div>
+            <div class="seabed-marker">
+                <h2>Fosse des Mariannes</h2>
+                <p>10 924 mètres — Vous avez touché le point le plus profond sur Terre.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="popup-overlay" id="media-popup">
+        <div class="popup-content" id="popup-box">
+            <button class="popup-close" id="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION DES PALIER TEXTUELS (NEAL.FUN STYLE)
+        const paliersInfo = [
+            {
+                profondeur: 200,
+                titre: "Zone Crépusculaire (Mésopélagique)",
+                description: "À partir d'ici, la lumière du soleil décroît rapidement. C'est le royaume des ombres où commence la photosynthèse impossible."
+            },
+            {
+                profondeur: 1000,
+                titre: "Zone de Minuit (Bathypélagique)",
+                description: "Plus aucun rayon de soleil ne traverse cette couche. La faim et l'obscurité totale règnent. Pour survivre et chasser, la majorité des créatures créent leur propre lumière : la bioluminescence."
+            },
+            {
+                profondeur: 4000,
+                titre: "La Plaine Abyssale (Abyssopélagique)",
+                description: "L'eau y est proche du point de congélation (environ 2°C) et la pression est écrasante, équivalente à celle d'un éléphant posé sur un timbre-poste."
+            },
+            {
+                profondeur: 6000,
+                titre: "Les Tranchées Hadales (Hadopélagique)",
+                description: "Nommée d'après Hadès, dieu des enfers. Ce sont les failles et canyons les plus profonds et inexplorés de notre planète."
+            }
+        ];
+
+        // DATA ANIMAUX AVEC TAILLE RELATIVE (En % de la largeur écran 'vw')
+        const animaux = [
+            {
+                nom: "Ours Blanc",
+                nomLatin: "Ursus maritimus",
+                taille: "2.5 m",
+                tailleRelative: "12vw",
+                profondeur: 15,
+                anecdote: "Excellent nageur, il peut tenir plusieurs minutes en apnée pour chasser.",
+                position: "gauche",
+                image: "images/ours_blanc.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Béluga",
+                nomLatin: "Delphinapterus leucas",
+                taille: "4.5 m",
+                tailleRelative: "14vw",
+                profondeur: 120,
+                anecdote: "Surnommé le canari des mers à cause des sifflements aigus qu'il utilise pour communiquer.",
+                position: "milieu-droite",
+                image: "images/beluga.png",
+                mediaClick: "images/beluga_video.mp4"
+            },
+            {
+                nom: "Grand Requin Blanc",
+                nomLatin: "Carcharodon carcharias",
+                taille: "5 m",
+                tailleRelative: "16vw",
+                profondeur: 350,
+                anecdote: "Ses récepteurs sensoriels peuvent détecter une goutte de sang dans des millions de litres d'eau.",
+                position: "milieu",
+                image: "images/requin_blanc.png",
+                mediaClick: "images/requin_photo.png"
+            },
+            {
+                nom: "Requin Lutin",
+                nomLatin: "Mitsukurina owstoni",
+                taille: "3.8 m",
+                tailleRelative: "13vw",
+                profondeur: 900,
+                anecdote: "Véritable fossile vivant, sa mâchoire se projette littéralement vers l'avant pour capturer ses proies.",
+                position: "gauche",
+                image: "images/requin_lutin.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Calmar Géant",
+                nomLatin: "Architeuthis dux",
+                taille: "12 m",
+                tailleRelative: "22vw",
+                profondeur: 1500,
+                anecdote: "Ses yeux ont la taille d'une assiette pour capter la moindre lueur dans le noir absolu.",
+                position: "droite",
+                image: "images/calmar_geant.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Poisson-Lanterne",
+                nomLatin: "Melanocetus johnsonii",
+                taille: "15 cm",
+                tailleRelative: "6vw",
+                profondeur: 2500,
+                anecdote: "La femelle possède un leurre lumineux sur la tête rempli de bactéries bioluminescentes.",
+                position: "milieu-gauche",
+                image: "images/poisson_lanterne.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Nautile",
+                nomLatin: "Nautilus pompilius",
+                taille: "20 cm",
+                tailleRelative: "7vw",
+                profondeur: 4500,
+                anecdote: "Cette espèce n'a quasiment pas évolué depuis plus de 400 millions d'années.",
+                position: "droite",
+                image: "images/nautile.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Amphipode Géant",
+                nomLatin: "Alicella gigantea",
+                taille: "34 cm",
+                tailleRelative: "8vw",
+                profondeur: 7000,
+                anecdote: "Alors que ses cousins de surface font quelques millimètres, lui souffre de gigantisme des profondeurs.",
+                position: "gauche",
+                image: "images/amphipode.png",
+                mediaClick: ""
+            },
+            {
+                nom: "Poissons Limaces des Mariannes",
+                nomLatin: "Pseudoliparis swirei",
+                taille: "20 cm",
+                tailleRelative: "9vw",
+                profondeur: 8100,
+                anecdote: "C'est l'un des poissons vivants les plus profonds jamais filmés au monde.",
+                position: "milieu",
+                image: "images/poisson_limace.png",
+                mediaClick: ""
+            }
+        ];
+
+        const PIXELS_PER_METER = 14;
+        const MAX_DEPTH = 10924;
+
+        const container = document.getElementById('abyss-space');
+        const milestonesGroup = document.getElementById('milestones-group');
+        const meterVal = document.getElementById('meter-val');
+        const zoneTxt = document.getElementById('zone-txt');
+        const floorElement = document.getElementById('ocean-floor');
+
+        // Calcul hauteur globale
+        const totalAbyssHeight = MAX_DEPTH * PIXELS_PER_METER;
+        document.body.style.height = `${totalAbyssHeight + window.innerHeight + 500}px`;
+        floorElement.style.top = `${totalAbyssHeight + window.innerHeight}px`;
+
+        // GENERATION DES ANIMAUX AVEC TAILLE CUSTOMISEE
+        animaux.forEach((animal) => {
+            const card = document.createElement('div');
+            card.className = `animal-card pos-${animal.position}`;
+            card.style.width = animal.tailleRelative;
+
+            const topPosition = (animal.profondeur * PIXELS_PER_METER) + window.innerHeight;
+            card.style.top = `${topPosition}px`;
+
+            const randomDelay = (Math.random() * -5).toFixed(2);
+            card.style.animationDelay = `${randomDelay}s`;
+
+            card.innerHTML = `
+                <div class="animal-tooltip">${animal.anecdote}</div>
+                <img src="${animal.image}" alt="${animal.nom}" loading="lazy">
+                <div class="animal-name">${animal.nom}</div>
+                <div class="animal-latin">${animal.nomLatin}</div>
+                <div class="animal-size">Taille : ${animal.taille}</div>
+            `;
+
+            if (animal.mediaClick && animal.mediaClick.trim() !== "") {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPopup(animal.mediaClick);
+                });
+            }
+            container.appendChild(card);
+        });
+
+        // GENERATION DES PALIERS TEXTUELS DANS LES ABYSSES
+        paliersInfo.forEach((palier) => {
+            const block = document.createElement('div');
+            block.className = 'depth-milestone';
+
+            const milestoneTop = (palier.profondeur * PIXELS_PER_METER) + window.innerHeight;
+            block.style.top = `${milestoneTop}px`;
+
+            block.innerHTML = `
+                <div class="milestone-title">${palier.titre}</div>
+                <div class="milestone-desc">${palier.description}</div>
+            `;
+            milestonesGroup.appendChild(block);
+        });
+
+        // --- ENGIN DE PILOTAGE DU SOUS-MARIN ENCAPSULÉ DANS LE VIEWPORT & PROGRESSION DE SCROLL ---
+        const subPilot = document.getElementById('sub-pilot-container');
+        const subImage = document.querySelector('.sub-image');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let isAudioUnlocked = false;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            // Le conteneur se cale précisément sur la souris pour maintenir l'exactitude du point bleu (viseur)
+            subPilot.style.left = `${mouseX}px`;
+            subPilot.style.top = `${mouseY}px`;
+
+            // Configuration adaptative de la taille et des offsets du sous-marin (Gestion Responsive)
+            const isMobile = window.innerWidth <= 768;
+            const subWidth = isMobile ? 135 : 210;
+            const subHeight = isMobile ? 75 : 120;
+            const offsetLeft = isMobile ? 15 : 25;
+            const offsetTop = isMobile ? 15 : 20;
+
+            // Calcul de la position globale voulue dans la zone de vision (Viewport)
+            let targetSubLeft = mouseX + offsetLeft;
+            let targetSubTop = mouseY + offsetTop;
+
+            // Restriction de sécurité (Clamping) pour empêcher le sous-marin de dépasser les bords visibles de l'écran
+            if (targetSubLeft < 0) targetSubLeft = 0;
+            if (targetSubLeft > window.innerWidth - subWidth) targetSubLeft = window.innerWidth - subWidth;
+            if (targetSubTop < 0) targetSubTop = 0;
+            if (targetSubTop > window.innerHeight - subHeight) targetSubTop = window.innerHeight - subHeight;
+
+            // Ajustement de la position relative de l'image à l'intérieur de son conteneur parent
+            subImage.style.left = `${targetSubLeft - mouseX}px`;
+            subImage.style.top = `${targetSubTop - mouseY}px`;
+
+            // Débloque l'audio sur premier mouvement si non fait
+            if(!isAudioUnlocked) { unlockAudio(); }
+        });
+
+        // Fonction de boucle pour gérer la descente/remontée automatique progressive (inertie)
+        function updateProgressiveScroll() {
+            const viewHeight = window.innerHeight;
+            const activationZone = 130; // Zone de déclenchement en pixels depuis les bords haut/bas
+            const maxScrollSpeed = 55;   // Vitesse maximale de défilement (pixels par frame)
+
+            if (mouseY > viewHeight - activationZone) {
+                const delta = mouseY - (viewHeight - activationZone);
+                const intensity = Math.pow(delta / activationZone, 2);
+                window.scrollBy(0, intensity * maxScrollSpeed);
+            }
+            else if (mouseY < activationZone && window.scrollY > 0) {
+                const delta = activationZone - mouseY;
+                const intensity = Math.pow(delta / activationZone, 2);
+                window.scrollBy(0, -intensity * maxScrollSpeed);
+            }
+
+            requestAnimationFrame(updateProgressiveScroll);
+        }
+        requestAnimationFrame(updateProgressiveScroll);
+
+        // --- CONTROLE DU SYSTEME AUDIO ET DE LA CAPSULE DE VOLUMES ---
+        const bgMusic = document.getElementById('bg-music');
+        const volSlider = document.getElementById('vol-slider');
+        const volFill = document.getElementById('vol-fill');
+        const muteBtn = document.getElementById('mute-btn');
+        let currentVolume = 0.6; // Initie le volume à 60%
+        let isMuted = false;
+
+        function setVolume(volumeFactor) {
+            currentVolume = Math.max(0, Math.min(1, volumeFactor));
+            if(!isMuted) {
+                bgMusic.volume = currentVolume;
+            }
+            volFill.style.height = `${currentVolume * 100}%`;
+        }
+        setVolume(currentVolume);
+
+        // Gestion du clic et drag dans le pilier de volume
+        function handleVolumeDrag(e) {
+            const rect = volSlider.getBoundingClientRect();
+            const clickYFromBottom = rect.bottom - e.clientY;
+            const newVol = clickYFromBottom / rect.height;
+            if(isMuted) toggleMute();
+            setVolume(newVol);
+        }
+
+        let isDraggingVol = false;
+        volSlider.addEventListener('mousedown', (e) => {
+            isDraggingVol = true;
+            handleVolumeDrag(e);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(isDraggingVol) handleVolumeDrag(e);
+        });
+        window.addEventListener('mouseup', () => { isDraggingVol = false; });
+
+        // Bouton Mute rapide
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (isMuted) {
+                bgMusic.volume = 0;
+                muteBtn.style.color = '#ef4444'; // Devient rouge si coupé
+                volFill.style.opacity = '0.3';
+            } else {
+                bgMusic.volume = currentVolume;
+                muteBtn.style.color = '#94a3b8';
+                volFill.style.opacity = '1';
+            }
+        }
+        muteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMute();
+        });
+
+        function unlockAudio() {
+            isAudioUnlocked = true;
+            bgMusic.play().catch(() => {
+                isAudioUnlocked = false;
+            });
+        }
+        window.addEventListener('click', () => { if(!isAudioUnlocked) unlockAudio(); });
+
+
+        // --- SCROLL LISTENER POUR L'UI ---
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const surfaceHeight = window.innerHeight;
+
+            if (scrollTop > surfaceHeight * 0.1) {
+                document.body.classList.add('submerged');
+            } else {
+                document.body.classList.remove('submerged');
+            }
+
+            let currentDepth = 0;
+            if (scrollTop > surfaceHeight) {
+                currentDepth = Math.floor((scrollTop - surfaceHeight) / PIXELS_PER_METER);
+            }
+            if (currentDepth > MAX_DEPTH) currentDepth = MAX_DEPTH;
+
+            meterVal.textContent = currentDepth.toLocaleString('fr-FR');
+
+            // Actualisation des paliers fixes
+            if (currentDepth < 200) {
+                zoneTxt.textContent = "Zone Épipélagique (0m - 200m)";
+            } else if (currentDepth < 1000) {
+                zoneTxt.textContent = "Zone Mésopélagique (200m - 1000m)";
+            } else if (currentDepth < 4000) {
+                zoneTxt.textContent = "Zone Bathypélagique (1000m - 4000m)";
+            } else if (currentDepth < 6000) {
+                zoneTxt.textContent = "Zone Abyssopélagique (4000m - 6000m)";
+            } else {
+                zoneTxt.textContent = "Zone Hadopélagique (6000m - Fosse)";
+            }
+        });
+
+        // BULLES CONTINUES
+        function spawnContinuousBubbles() {
+            setInterval(() => {
+                if (window.scrollY > window.innerHeight * 0.3) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+
+                    const size = Math.random() * 6 + 3;
+                    const leftPos = Math.random() * window.innerWidth;
+
+                    bubble.style.width = `${size}px`;
+                    bubble.style.height = `${size}px`;
+                    bubble.style.left = `${leftPos}px`;
+
+                    const duration = Math.random() * 3 + 4;
+                    bubble.style.animationDuration = `${duration}s`;
+
+                    document.body.appendChild(bubble);
+                    setTimeout(() => { bubble.remove(); }, duration * 1000);
+                }
+            }, 250);
+        }
+        spawnContinuousBubbles();
+
+        // POPUP MANAGEMENT
+        const popup = document.getElementById('media-popup');
+        const popupBox = document.getElementById('popup-box');
+        const closeBtn = document.getElementById('close-btn');
+
+        function openPopup(mediaPath) {
+            const oldMedia = popupBox.querySelector('.inserted-media');
+            if (oldMedia) oldMedia.remove();
+
+            const isVideo = mediaPath.endsWith('.mp4') || mediaPath.endsWith('.webm');
+            let mediaElement;
+
+            if (isVideo) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = mediaPath;
+                mediaElement.autoplay = true;
+                mediaElement.controls = true;
+                mediaElement.className = 'inserted-media';
+                mediaElement.onended = () => { closePopup(); };
+            } else {
+                mediaElement = document.createElement('img');
+                mediaElement.src = mediaPath;
+                mediaElement.className = 'inserted-media';
+            }
+
+            popupBox.insertBefore(mediaElement, closeBtn);
+            popup.classList.add('active');
+        }
+
+        function closePopup() {
+            popup.classList.remove('active');
+            setTimeout(() => {
+                const media = popupBox.querySelector('.inserted-media');
+                if (media) media.remove();
+            }, 300);
+        }
+
+        closeBtn.addEventListener('click', closePopup);
+        popup.addEventListener('click', closePopup);
+        popupBox.addEventListener('click', (e) => {
+            if(e.target !== closeBtn && !e.target.hasAttribute('controls')) {
+                closePopup();
+            } else {
+                e.stopPropagation();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pictionnary SVT</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ===== RESET & BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --forest: #2d5a3d;
+  --forest-light: #4a8c5f;
+  --moss: #6b8e4e;
+  --leaf: #8fbc5a;
+  --earth: #8b6f47;
+  --earth-light: #b8956a;
+  --bark: #3d2b1f;
+  --bark-light: #5c4033;
+  --water: #4a90a4;
+  --water-light: #6bb3c9;
+  --sky: #87ceeb;
+  --cream: #f5f0e6;
+  --sand: #e8dcc8;
+  --bg-dark: #1a1814;
+  --bg-card: rgba(45, 90, 61, 0.08);
+  --border-soft: rgba(107, 142, 78, 0.25);
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  color: var(--cream);
+  overflow-x: hidden;
+  background: var(--bg-dark);
+  min-height: 100vh;
+}
+
+/* ===== ORGANIC BACKGROUND ===== */
+.bg-organic {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(45, 90, 61, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(74, 144, 164, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(139, 111, 71, 0.06) 0%, transparent 60%),
+    linear-gradient(180deg, #1a1814 0%, #1e2318 30%, #1a1814 70%, #1e2018 100%);
+}
+
+/* ===== FLOATING LEAVES / PARTICLES ===== */
+.particles {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.leaf {
+  position: absolute;
+  opacity: 0;
+  animation: leafFloat 12s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(107, 142, 78, 0.3));
+}
+
+@keyframes leafFloat {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(0deg) scale(0.3);
+  }
+  8% {
+    opacity: 0.6;
+  }
+  92% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) rotate(360deg) scale(1);
+    opacity: 0;
+  }
+}
+
+/* ===== VINE DECORATION ===== */
+.vine-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(107, 142, 78, 0.3) 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 0%, rgba(74, 144, 164, 0.2) 0%, transparent 40%);
+  opacity: 0.6;
+}
+
+/* ===== LAYOUT ===== */
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== TITLE ===== */
+h1 {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 3px;
+  margin-top: 25px;
+  margin-bottom: 5px;
+  color: var(--cream);
+  text-shadow:
+    0 2px 10px rgba(0,0,0,0.5),
+    0 0 40px rgba(107, 142, 78, 0.3);
+  position: relative;
+}
+
+h1::after {
+  content: "";
+  display: block;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--moss), transparent);
+  margin: 12px auto 0;
+  border-radius: 2px;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--earth-light);
+  font-size: 13px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-bottom: 35px;
+  font-weight: 300;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 28px;
+  padding: 35px;
+  margin-top: 25px;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  border: 1px solid var(--border-soft);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--moss), transparent);
+  opacity: 0.5;
+}
+
+.card:hover {
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.4),
+    0 0 40px rgba(107, 142, 78, 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(107, 142, 78, 0.35);
+}
+
+h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 25px;
+  color: var(--leaf);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* ===== FORM ELEMENTS ===== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--earth-light);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+select, input[type="text"] {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(107, 142, 78, 0.2);
+  background: rgba(26, 24, 20, 0.5);
+  color: var(--cream);
+  font-family: 'Nunito', sans-serif;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+select:focus, input[type="text"]:focus {
+  border-color: var(--moss);
+  box-shadow: 0 0 20px rgba(107, 142, 78, 0.15);
+  background: rgba(26, 24, 20, 0.7);
+}
+
+select option {
+  background: #1e2318;
+  color: var(--cream);
+}
+
+/* ===== TEAM SETUP ===== */
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  background: rgba(26, 24, 20, 0.4);
+  border-radius: 16px;
+  border: 1px solid rgba(107, 142, 78, 0.1);
+  transition: all 0.3s ease;
+  animation: slideIn 0.4s ease;
+}
+
+.team-row:hover {
+  border-color: rgba(107, 142, 78, 0.25);
+  background: rgba(26, 24, 20, 0.55);
+}
+
+.team-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--moss);
+  min-width: 28px;
+  text-align: center;
+}
+
+.team-row input[type="text"] {
+  flex: 1;
+}
+
+.color-picker-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.color-picker-wrapper input[type="color"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+  border: none;
+}
+
+.color-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 240, 230, 0.15);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-preview::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.color-picker-wrapper:hover .color-preview {
+  transform: scale(1.12);
+  border-color: rgba(245, 240, 230, 0.35);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    0 4px 12px rgba(0,0,0,0.3);
+}
+
+.team-remove-btn {
+  background: rgba(139, 0, 0, 0.2);
+  border: 1px solid rgba(180, 60, 60, 0.3);
+  color: #c06060;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-family: 'Nunito', sans-serif;
+}
+
+.team-remove-btn:hover {
+  background: rgba(180, 60, 60, 0.35);
+  transform: scale(1.1);
+  color: #e08080;
+}
+
+.team-remove-btn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== ADD TEAM BUTTON ===== */
+.add-team-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.btn-add-team {
+  padding: 12px 28px;
+  border: 2px dashed rgba(107, 142, 78, 0.35);
+  border-radius: 16px;
+  background: rgba(107, 142, 78, 0.05);
+  color: var(--moss);
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 1px;
+}
+
+.btn-add-team:hover {
+  background: rgba(107, 142, 78, 0.12);
+  border-color: var(--moss);
+  box-shadow: 0 0 20px rgba(107, 142, 78, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-add-team:active {
+  transform: translateY(0);
+}
+
+.btn-add-team.hidden {
+  display: none;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 700;
+  margin: 6px;
+  font-size: 15px;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--forest), var(--forest-light));
+  color: var(--cream);
+  box-shadow: 0 4px 16px rgba(45, 90, 61, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 28px rgba(45, 90, 61, 0.45);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #3a7a4a, #4a9a5a);
+  color: white;
+  box-shadow: 0 4px 16px rgba(58, 122, 74, 0.3);
+}
+
+.btn-success:hover {
+  box-shadow: 0 8px 28px rgba(58, 122, 74, 0.45);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #8b3a3a, #a05050);
+  color: white;
+  box-shadow: 0 4px 16px rgba(139, 58, 58, 0.3);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 8px 28px rgba(139, 58, 58, 0.45);
+}
+
+.btn-gray {
+  background: linear-gradient(135deg, #5a5045, #3d3630);
+  color: var(--cream);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.btn-gray:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+}
+
+.btn-lg {
+  padding: 18px 42px;
+  font-size: 18px;
+  border-radius: 18px;
+}
+
+.btn-center {
+  display: flex;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+/* ===== GAME SCREEN ===== */
+#game {
+  text-align: center;
+  position: relative;
+}
+
+#teamName {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 700;
+  font-style: italic;
+  margin-bottom: 20px;
+  padding: 14px 32px;
+  border-radius: 20px;
+  display: inline-block;
+  background: rgba(26, 24, 20, 0.4);
+  border: 1px solid rgba(107, 142, 78, 0.15);
+  transition: all 0.5s ease;
+  letter-spacing: 1px;
+}
+
+/* ===== TIMER ===== */
+.timer-container {
+  position: relative;
+  margin: 25px auto;
+  width: 200px;
+  height: 200px;
+}
+
+.timer-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid rgba(107, 142, 78, 0.1);
+}
+
+.timer-progress {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--moss);
+  border-right-color: var(--moss);
+  transition: all 1s linear;
+  transform: rotate(-90deg);
+}
+
+.timer-progress.warning {
+  border-top-color: var(--earth-light);
+  border-right-color: var(--earth-light);
+}
+
+.timer-progress.danger {
+  border-top-color: #a05050;
+  border-right-color: #a05050;
+  animation: pulseRing 1s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(160, 80, 80, 0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(160, 80, 80, 0); }
+}
+
+#timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--leaf);
+  letter-spacing: 2px;
+}
+
+#timer.warning { color: var(--earth-light); }
+#timer.danger { color: #c07070; }
+
+/* ===== WORD DISPLAY ===== */
+.word-container {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 25px 0 20px;
+  position: relative;
+}
+
+#word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(26px, 4.5vw, 42px);
+  font-weight: 700;
+  text-align: center;
+  color: var(--cream);
+  letter-spacing: 2px;
+  line-height: 1.3;
+  animation: wordAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 20px;
+}
+
+@keyframes wordAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.word-placeholder {
+  color: rgba(245, 240, 230, 0.25);
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 300;
+}
+
+/* ===== SCORE BADGE ===== */
+.score-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(26, 24, 20, 0.5);
+  border: 1px solid rgba(107, 142, 78, 0.15);
+  border-radius: 14px;
+  padding: 8px 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--earth-light);
+}
+
+.score-value {
+  font-weight: 800;
+  font-size: 20px;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 15px 0 20px;
+}
+
+/* ===== FEEDBACK OVERLAYS ===== */
+.feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feedback-overlay.active {
+  opacity: 1;
+}
+
+.feedback-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 9vw, 72px);
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  animation: feedbackPop 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feedback-success {
+  color: var(--leaf);
+  text-shadow: 0 0 40px rgba(143, 188, 90, 0.4);
+}
+
+.feedback-pass {
+  color: #c07070;
+  text-shadow: 0 0 40px rgba(160, 80, 80, 0.3);
+}
+
+@keyframes feedbackPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== END BUTTON - FIXED SUPERPOSITION ===== */
+.end-game-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(107, 142, 78, 0.1);
+}
+
+/* ===== PODIUM ===== */
+#podium {
+  display: none;
+  text-align: center;
+  padding: 35px;
+}
+
+.podium-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 700;
+  font-style: italic;
+  margin-bottom: 35px;
+  color: var(--earth-light);
+}
+
+.podium-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.podium-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: rgba(26, 24, 20, 0.4);
+  border: 1px solid rgba(107, 142, 78, 0.1);
+  transition: all 0.4s ease;
+  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.podium-item:hover {
+  transform: translateX(8px);
+  border-color: rgba(107, 142, 78, 0.2);
+}
+
+.podium-item:nth-child(1) {
+  animation-delay: 0.1s;
+  border-color: rgba(180, 150, 80, 0.25);
+  background: linear-gradient(90deg, rgba(180, 150, 80, 0.08), rgba(26, 24, 20, 0.4));
+}
+.podium-item:nth-child(2) { animation-delay: 0.2s; }
+.podium-item:nth-child(3) { animation-delay: 0.3s; }
+.podium-item:nth-child(4) { animation-delay: 0.4s; }
+.podium-item:nth-child(5) { animation-delay: 0.5s; }
+.podium-item:nth-child(6) { animation-delay: 0.6s; }
+.podium-item:nth-child(7) { animation-delay: 0.7s; }
+.podium-item:nth-child(8) { animation-delay: 0.8s; }
+
+.podium-rank {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  width: 45px;
+  text-align: center;
+}
+
+.podium-rank.gold { color: #d4a843; }
+.podium-rank.silver { color: #a8a8a8; }
+.podium-rank.bronze { color: #b87333; }
+
+.podium-name {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: left;
+  padding-left: 12px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.podium-score {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--leaf);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== CONFETTI (LEAF STYLE) ===== */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  animation: confettiFall 3s ease-out forwards;
+  border-radius: 50% 0 50% 0;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(540deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ===== ROUND INDICATOR ===== */
+.round-info {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--earth-light);
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .container { padding: 15px; }
+  .card { padding: 25px 18px; border-radius: 22px; }
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 15px;
+  }
+  .action-buttons .btn {
+    width: 100%;
+    max-width: 260px;
+    margin: 0;
+  }
+  .btn {
+    width: 100%;
+    max-width: 260px;
+    margin: 4px 0;
+  }
+  .btn-lg { padding: 16px 32px; font-size: 16px; }
+  .team-row { flex-wrap: wrap; gap: 8px; }
+  .team-row input[type="text"] { min-width: 150px; }
+  .timer-container { width: 160px; height: 160px; }
+  #timer { font-size: 38px; }
+  .score-badge {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 0 auto 15px;
+    justify-content: center;
+    display: inline-flex;
+  }
+  .end-game-bar { margin-top: 15px; padding-top: 12px; }
+  h1 { margin-top: 15px; }
+}
+
+/* ===== HIDDEN ===== */
+.hidden { display: none !important; }
+
+/* ===== ANIMATIONS UTILITIES ===== */
+.fade-in { animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.scale-in { animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+</style>
+</head>
+
+<body>
+
+<div class="bg-organic"></div>
+<div class="vine-top"></div>
+<div class="particles" id="particles"></div>
+
+<div class="feedback-overlay" id="feedbackOverlay">
+  <div class="feedback-text" id="feedbackText"></div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<div class="container">
+
+  <h1>Pictionnary SVT</h1>
+  <div class="subtitle">Jeu de dessin naturel</div>
+
+  <!-- ===== SETUP ===== -->
+  <div id="setup" class="card fade-in">
+    <h2>Configuration</h2>
+
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="category"></select>
+    </div>
+
+    <div id="teamSetup"></div>
+
+    <div class="add-team-container">
+      <button class="btn-add-team" id="addTeamBtn" onclick="addTeam()">
+        <span>+</span> Ajouter une équipe
+      </button>
+    </div>
+
+    <div class="btn-center">
+      <button class="btn btn-primary btn-lg" onclick="startGame()">
+        <span>🌿</span> Démarrer la partie
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div id="game" class="card hidden">
+    <div class="round-info" id="roundInfo">Tour 1 — Manche 1</div>
+
+    <div id="teamName"></div>
+
+    <div class="timer-container" id="timerContainer">
+      <div class="timer-ring"></div>
+      <div class="timer-progress" id="timerProgress"></div>
+      <div id="timer">01:00</div>
+    </div>
+
+    <div class="btn-center">
+      <button id="goBtn" class="btn btn-primary btn-lg" onclick="startRound()">
+        <span>▶</span> GO !
+      </button>
+    </div>
+
+    <div class="word-container">
+      <div id="word">
+        <span class="word-placeholder">Appuie sur GO pour commencer</span>
+      </div>
+    </div>
+
+    <div class="action-buttons" id="actionButtons" style="display:none;">
+      <button class="btn btn-danger" onclick="passWord()">
+        <span>⏭</span> Je passe
+      </button>
+      <button class="btn btn-success" onclick="validateWord()">
+        <span>✓</span> C'est validé
+      </button>
+    </div>
+
+    <div class="score-badge" id="scoreBadge">
+      <span>Score:</span>
+      <span class="score-value" id="currentScore">0</span>
+    </div>
+
+    <!-- End game button moved inside card, below action buttons -->
+    <div class="end-game-bar" id="endGameBar">
+      <button class="btn btn-gray" onclick="endGame()">
+        <span>🏁</span> Fin de partie
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PODIUM ===== -->
+  <div id="podium" class="card"></div>
+
+  <!-- ===== AUDIO ===== -->
+  <audio id="gong" src="Song/gong.mp3"></audio>
+  <audio id="success" src="Song/success.mp3"></audio>
+  <audio id="pass" src="Song/pass.mp3"></audio>
+
+  <!-- ===== WEB AUDIO API FOR BEEP GENERATION ===== -->
+  <script>
+  let audioCtx = null;
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playBeep(frequency = 880, duration = 0.08, volume = 0.45) {
+    try {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration);
+    } catch(e) {
+      // Silencieux si Web Audio non supporté
+    }
+  }
+
+  function playCountdownBeep(secondsLeft) {
+    // Fréquence monte légèrement quand on approche de 0
+    const freq = 700 + (10 - secondsLeft) * 40;
+    playBeep(freq, 0.06, 0.12);
+  }
+  </script>
+
+</div>
+
+<script>
+
+/* ===== CATEGORIES ===== */
+const categories = {
+  "SVT": ["cellule","ADN","neurone","fossile","volcan","écosystème","photosynthèse","plante","animal","bactérie","virus","mitose","enzyme","protéine","chloroplaste","noyau","membrane","cytoplasme","moisissure","champignon","algue","mousse","fougère","gland","pomme de pin","graine","racine","tige","feuille","fleur","pétale","pollen","nectar","abeille","fourmi","araignée","serpent","lézard","grenouille","crapaud","tortue","poisson","requin","baleine","dauphin","coquillage","corail","méduse","étoile de mer","crabe","homard","crevette","moule","huître","escargot","limace","ver de terre","papillon","chenille","coccinelle","libellule","moustique","mouche","guêpe","bourdon","scarabée","criquet","sauterelle","mante religieuse","puceron","acarien","tique","punaise","cigale","perce-oreille","lombric","plancton","amibe","paramecie","euglène","volvox","spirogyre","chlamydomonas","diatomée","dinoflagellé","foraminifère","radiolaire","éponge","anémone","hydre","planaire","ténia","ascaris","douve","tendon","ligament","cartilage","os","moelle","sang","lymphocyte"],
+
+  "Sciences": ["électricité","énergie","force","lumière","atome","molécule","gravité","quantique","relativité","fusion","fission","aimant","pile","ampoule","interrupteur","circuit","résistance","condensateur","bobine","transistor","diode","laser","magnétisme","friction","pesanteur","inertie","vitesse","accélération","masse","volume","densité","pression","température","chaleur","froid","glace","vapeur","liquide","solide","gaz","plasma","cristal","roche","mineral","sable","argile","granit","marbre","calcaire","ardoise","schiste","gypse","sel","sucre","vinaigre","savon","acide","base","pH","oxydation","réduction","catalyse","distillation","filtration","cristallisation","sublimation","condensation","évaporation","solidification","fusion2","vaporisation","dilatation","contraction","diffusion","osmose","capillarité","tension superficielle","viscosité","élasticité","plasticité","dureté","malléabilité","ductilité","conductivité","isolant","réfractaire","alliage","métal","métalloïde","non-métal","gaz noble","halogène","alcali","terre alcaline","spectre","longueur d'onde","fréquence","période","amplitude"],
+
+  "Nature": ["forêt","rivière","montagne","océan","pluie","vent","arbre","cascade","désert","toundra","récif coralien","volcan","grotte","glaçon","iceberg","tornade","ouragan","tsunami","tremblement","érosion","sédiment","rocher","falaise","plage","dune","vallée","canyon","plateau","plaines","prairie","savane","jungle","mangrove","marais","étang","lac","mare","ruisseau","torrent","source","delta","estuaire","fjord","péninsule","île","archipel","atoll","lagune","baie","golfe","détroit","cap","promontoire","colline","mont","sommet","crête","arête","glacier","névé","moraine","cirque","vallée glaciaire","géyser","fumerolle","source chaude","grotte","stalactite","stalagmite","concrétion","galerie","puits","abîme","gouffre","aven","doline","polje","oued","wadi","oasis","steppe","taïga","broussaille","maquis","garigue","matorral","pampa","cerrado","caatinga","chaparral","fynbos","heath","moor","bog","fen","carr"],
+
+  "Animaux": ["lion","chat","chien","aigle","requin","grenouille","cheval","pieuvre","caméléon","panda","koala","tigre","éléphant","girafe","zèbre","hippopotame","rhinocéros","ours","loup","renard","lapin","écureuil","hérisson","castor","rat","souris","hamster","cochon d'inde","furet","chèvre","mouton","vache","cochon","poule","coq","canard","oie","dinde","pigeon","perroquet","hibou","chouette","corbeau","pie","moineau","hirondelle","rossignol","cygne","flamant rose","pingouin","manchot","autruche","émeu","kiwi","casoar","tortue","lézard","iguane","gecko","serpent","cobra","vipère","python","crocodile","alligator","varan","dragon de komodo","salamandre","triton","axolotl","poisson rouge","carpe","truite","saumon","thon","maquereau","sardine","anchois","hareng","morue","sole","turbot","raie","turbot2","espadon","marlin","méduse","poulpe","calamar","seiche","huître","moule","coquille Saint-Jacques","oursin","étoile","ornithorynque","échidné","tatou","paresseux","tamanoir"],
+
+  "Sport": ["football","tennis","natation","course","vélo","basket","gymnastique","escalade","surf","rugby","volley","handball","hockey","golf","boxe","judo","karaté","escrime","équitation","voile","ski","snowboard","patinage","plongée","aviron","canoë","kayak","rafting","paddle","kitesurf","windsurf","planche à voile","parapente","parachute","saut à l'élastique","escalade2","alpinisme","randonnée","trail","marathon","sprint","haies","relais","saut en hauteur","saut en longueur","triple saut","lancer de poids","lancer de disque","lancer de javelot","lancer de marteau","décathlon","pentathlon","biathlon","triathlon","lutte","haltérophilie","musculation","fitness","yoga","pilates","danse","ballet","hip-hop","breakdance","capoeira","taekwondo","aïkido","sumo","catch","mma","kickboxing","muay thai","krav maga","savate","canne de combat","baton","tir à l'arc","tir sportif","ball-trap","skeet","golf2","mini-golf","croquet","pétanque","boules","fléchettes","billard","snooker","ping-pong","badminton","squash","tennis de table","padel","beach-volley","beach-soccer","futsal","water-polo","polo","hockey sur glace","curling"],
+
+  "Métiers": ["pompier","médecin","professeur","cuisinier","policier","vétérinaire","astronaute","pilote","architecte","boulanger","boucher","charcutier","poissonnier","épicier","pharmacien","dentiste","infirmier","kinésithérapeute","ostéopathe","chirurgien","anesthésiste","psychologue","psychiatre","avocat","notaire","huissier","juge","magistrat","journaliste","photographe","caméraman","réalisateur","acteur","chanteur","musicien","danseur","peintre","sculpteur","dessinateur","graphiste","webdesigner","développeur","informaticien","technicien","ingénieur","architecte2","paysagiste","urbaniste","agriculteur","éleveur","viticulteur","marin","pêcheur","plongeur","mineur","forgeron","mécanicien","électricien","plombier","menuisier","ébéniste","charpentier","maçon","couvreur","peintre2","tapissier","cordonnier","tailleur","couturier","coiffeur","esthéticien","masseur","guide","animateur","moniteur","entraîneur","arbitre","jardinier","fleuriste","libraire","bibliothécaire","archiviste","conservateur","conservateur2","antiquaire","bijoutier","horloger","opticien","audioprothésiste","prothésiste","orthophoniste","orthoptiste","pâtissier","chocolatier","glacier","barman","sommelier","caviste","fromager"],
+
+  "Objets du quotidien": ["stylo","chaise","table","téléphone","ordinateur","clé","bouteille","lampe","tasse","parapluie","couteau","fourchette","cuillère","assiette","verre","bol","poêle","casserole","plat","couvercle","spatule","louche","rouleau","ouvre-boîte","décapsuleur","tire-bouchon","ciseaux","couteau2","aiguille","fil","bouton","zip","velcro","élastique","ruban","scotch","colle","agrafeuse","trombone","élastique2","épingles","épingle à nourrice","safety pin","épingle à cheveux","barrette","peigne","brosse","miroir","savon","shampoing","dentifrice","brosse à dents","rasoir","serviette","drap","couverture","oreiller","matelas","lit","armoire","commode","étagère","tiroir","placard","penderie","cintre","panier","sac","valise","cartable","sac à dos","portefeuille","porte-monnaie","montre","réveil","calendrier","agenda","carnet","crayon","gomme","règle","rapporteur","équerre","compas","calculatrice","dictionnaire","atlas","globe","carte","boussole","jumelles","lunettes","lunettes de soleil","masque","casque","écouteurs","enceinte","radio","télécommande","batterie","chargeur","câble","multiprise","ampoule2","interrupteur2","prise","fusible","thermostat","ventilateur","radiateur","climatiseur","aspirateur","fer à repasser","machine à laver","sèche-linge","lave-vaisselle","réfrigérateur","congélateur","four","micro-ondes","grille-pain","cafetière","bouilloire","mixer","blender","robot","balance","thermomètre","balance2","pèse-personne","tapis","rideau","store","volet"],
+
+  "Géographie": ["France","Europe","Afrique","Asie","océan","désert","île","Antarctique","Amazonie","Himalaya","Paris","Londres","Berlin","Madrid","Rome","Athènes","Vienne","Prague","Budapest","Varsovie","Moscou","Saint-Pétersbourg","Istanbul","Le Caire","Casablanca","Tunis","Alger","Marrakech","Dakar","Abidjan","Lagos","Nairobi","Le Cap","Le Nil","Le Congo","Le Niger","Le Zambèze","Le Mississipi","Le Colorado","L'Amazone","Le Paraná","L'Orénoque","Le Danube","Le Rhin","La Seine","La Loire","Le Rhône","La Garonne","L'Escaut","La Tamise","Le Tibre","Le Pô","Le Gange","L'Indus","Le Brahmapoutre","Le Mékong","Le Yangtsé","Le Huang He","L'Amour","Le Volga","L'Ob","L'Ienisseï","La Léna","Le Mackenzie","Le Saint-Laurent","Le Mississippi2","Le Grand Lac Salé","Le lac Victoria","Le lac Tanganyika","Le lac Malawi","Le lac Baïkal","Le lac Supérieur","Le lac Michigan","Le lac Huron","Le lac Érié","Le lac Ontario","La mer Caspienne","La mer Morte","La mer Rouge","La Méditerranée","La mer du Nord","La mer Baltique","La mer Noire","La mer d'Aral","L'océan Atlantique","L'océan Pacifique","L'océan Indien","L'océan Arctique","L'océan Austral","Le canal de Panama","Le canal de Suez","Le détroit de Gibraltar","Le détroit de Magellan","Le cap Horn","Le cap de Bonne-Espérance","Le cap Vert"],
+
+  "Culture générale": ["tour Eiffel","pizza","cinéma","musique","livre","peinture","théâtre","opéra","ballet","Mona Lisa","Joconde","David","Vénus de Milo","La Cène","La Création d'Adam","Les Nymphéas","Guernica","Le Cri","La Persistance de la mémoire","Le Radeau de la Méduse","La Liberté guidant","Le Penseur","Le Discobole","La Victoire de Samothrace","Le Colisée","Le Parthénon","Le Panthéon","Notre-Dame","Versailles","Le Louvre","Le British Museum","Le Metropolitan","Le Prado","L'Uffizi","La chapelle Sixtine","Le Sistine","La Pietà","Le Dôme","La Sagrada Familia","La Alhambra","Le Taj Mahal","La Grande Muraille","Machu Picchu","Chichén Itzá","Pétra","Le Christ Rédempteur","Le Colisée2","Le Colosse","Les Jardins suspendus","Le phare d'Alexandrie","La bibliothèque","La statue de Zeus","Le temple d'Artémis","Le mausolée","Le stade","Le cirque","L'agora","L'acropole","Le forum","Les thermes","L'aqueduc","Le pont","Le château","Le manoir","La cathédrale","La basilique","La mosquée","La synagogue","Le temple","Le pagode","Le stupa","Le ziggourat","La pyramide","Le sphinx","L'obélisque","Le menhir","Le dolmen","Le cromlech","Le tumulus","Le kofun","Le moai","Le totem","Le tipi","L'igloo","La yourte","La case","Le riad","Le kasbah","Le ksar","Le caravansérail","Le souk","Le bazar","Le marché","Le Scream","La Nuit étoilée","Les Tournesols","Le Baiser","Le Baiser2","American Gothic"],
+
+  "Expressions": ["avoir la tête dans les nuages","poser un lapin","donner sa langue au chat","être rouge comme une tomate","chercher une aiguille dans une botte de foin","coûter les yeux de la tête","avoir le cafard","être dans la lune","avoir un poil dans la main","prendre la mouche","faire la grasse matinée","avoir un chat dans la gorge","mettre la puce à l'oreille","avoir les yeux plus gros que le ventre","avoir le cœur sur la main","avoir une mémoire d'éléphant","avoir une mémoire de poisson rouge","être têtu comme une mule","être malin comme un singe","être rusé comme un renard","être sourd comme un pot","être aveugle comme une taupe","être rapide comme l'éclair","être lent comme une tortue","être fort comme un ours","être maigre comme un clou","être gros comme une barrique","être haut comme trois pommes","être petit comme une cacahuète","avoir les dents qui rayent le parquet","avoir les yeux qui sortent des orbites","avoir les oreilles qui sifflent","avoir la chair de poule","avoir des fourmis dans les jambes","avoir un coup de barre","avoir un coup de pompe","avoir un coup de froid","prendre ses jambes à son cou","avoir le cul entre deux chaises","être entre le marteau et l'enclume","avoir d'autres chats à fouetter","ne pas avoir inventé le fil à couper le beurre","ne pas avoir la lumière à tous les étages","ne pas avoir un radis","ne pas avoir un sou","ne pas avoir un rond","ne pas avoir le souci du lendemain","avoir du pain sur la planche","avoir du plomb dans l'aile","avoir du sang sur les mains","avoir du cran","avoir du chien","avoir du nez","avoir du flair","avoir du goût","avoir du toupet","avoir du culot","avoir du pot","avoir de la veine","avoir de la chance","avoir de la barbe","avoir de la bouteille","avoir de la brouille","avoir de la suite dans les idées","avoir de la ressource","avoir de quoi","avoir de la marge","avoir de quoi faire","avoir de quoi se mettre sous la dent","avoir de quoi s'occuper","avoir de quoi se faire du souci","avoir de quoi rire","avoir de quoi pleurer","mettre les pieds dans le plat","tirer les vers du nez","avoir le feu sacré","jeter l'argent par les fenêtres","les doigts dans le nez","la cerise sur le gâteau","tuer le temps","passer l'éponge","mettre de l'eau dans son vin","prendre la tangente","faire d'une pierre deux coups","donner un coup de main","avoir le bras long","avoir la main verte","avoir la main lourde","avoir la main baladeuse","avoir les mains dans les poches","avoir les mains liées","avoir les mains libres","avoir les mains propres","avoir du sang froid","avoir chaud aux oreilles","avoir froid dans le dos","avoir la chair de poule2","avoir des papillons dans le ventre","avoir le cœur qui bat la chamade","avoir le cœur sur la main2","avoir le cœur gros","avoir le cœur à l'ouvrage"]
+};
+
+/* ===== STATE ===== */
+let teams = [];
+let order = [];
+let currentTeamIndex = 0;
+let timer;
+let timeLeft = 60;
+const ROUND_TIME = 60;
+let currentWord = null;
+let pool = [];
+let roundNumber = 1;
+let turnNumber = 1;
+const MAX_TEAMS = 8;
+
+/* ===== PARTICLES INIT (LEAVES) ===== */
+function initParticles() {
+  const container = document.getElementById('particles');
+  const leafShapes = ['🍃', '🌿', '🍂', '✦', '◆'];
+  const colors = ['#6b8e4e', '#8fbc5a', '#4a8c5f', '#4a90a4', '#b8956a'];
+
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'leaf';
+    p.innerText = leafShapes[Math.floor(Math.random() * leafShapes.length)];
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 12 + 's';
+    p.style.animationDuration = (8 + Math.random() * 8) + 's';
+    p.style.fontSize = (10 + Math.random() * 14) + 'px';
+    p.style.color = colors[Math.floor(Math.random() * colors.length)];
+    container.appendChild(p);
+  }
+}
+initParticles();
+
+/* ===== CATEGORY INIT ===== */
+const categorySelect = document.getElementById("category");
+for (let c in categories) {
+  let opt = document.createElement("option");
+  opt.value = c;
+  opt.innerText = c + " (" + categories[c].length + " mots)";
+  categorySelect.appendChild(opt);
+}
+
+/* ===== TEAM SETUP ===== */
+let teamCount = 3;
+const teamSetup = document.getElementById("teamSetup");
+
+function renderTeams() {
+  teamSetup.innerHTML = "";
+  const colors = ['#6b8e4e', '#4a90a4', '#b8956a', '#8fbc5a', '#a05050', '#7a6a9a', '#c07040', '#5a8a6a'];
+
+  for (let i = 0; i < teamCount; i++) {
+    const div = document.createElement('div');
+    div.className = 'team-row';
+    div.id = 'teamRow' + i;
+
+    const canRemove = teamCount > 2;
+    div.innerHTML = `
+      <div class="team-number">${i + 1}</div>
+      <input type="text" placeholder="Nom de l'équipe" id="team${i}" value="">
+      <div class="color-picker-wrapper">
+        <div class="color-preview" id="colorPreview${i}" style="background: ${colors[i % colors.length]}"></div>
+        <input type="color" id="color${i}" value="${colors[i % colors.length]}" oninput="updateColorPreview(${i}, this.value)">
+      </div>
+      <button class="team-remove-btn" onclick="removeTeam(${i})" ${!canRemove ? 'disabled' : ''} title="Supprimer cette équipe">
+        ×
+      </button>
+    `;
+    teamSetup.appendChild(div);
+  }
+
+  const addBtn = document.getElementById("addTeamBtn");
+  if (teamCount >= MAX_TEAMS) {
+    addBtn.classList.add('hidden');
+  } else {
+    addBtn.classList.remove('hidden');
+  }
+}
+
+renderTeams();
+
+/* ===== UPDATE COLOR PREVIEW ===== */
+function updateColorPreview(index, color) {
+  const preview = document.getElementById('colorPreview' + index);
+  if (preview) {
+    preview.style.background = color;
+  }
+}
+
+/* ===== ADD TEAM ===== */
+function addTeam() {
+  if (teamCount >= MAX_TEAMS) return;
+  teamCount++;
+  renderTeams();
+}
+
+/* ===== REMOVE TEAM ===== */
+function removeTeam(index) {
+  if (teamCount <= 2) return;
+
+  const row = document.getElementById('teamRow' + index);
+  if (row) {
+    row.style.animation = 'fadeIn 0.3s ease reverse';
+    setTimeout(() => {
+      teamCount--;
+      renderTeams();
+    }, 200);
+  }
+}
+
+/* ===== START GAME ===== */
+function startGame() {
+  teams = [];
+  pool = [...categories[categorySelect.value]];
+  roundNumber = 1;
+  turnNumber = 1;
+
+  for (let i = 0; i < teamCount; i++) {
+    const nameInput = document.getElementById("team" + i);
+    const colorInput = document.getElementById("color" + i);
+    if (!nameInput || !colorInput) continue;
+
+    const name = nameInput.value.trim();
+    const color = colorInput.value;
+    teams.push({
+      name: name || "Équipe " + (i + 1),
+      color: color,
+      score: 0,
+      id: i
+    });
+  }
+
+  order = [...Array(teams.length).keys()].sort(() => Math.random() - 0.5);
+
+  document.getElementById("setup").classList.add('hidden');
+  document.getElementById("game").classList.remove('hidden');
+  document.getElementById("game").classList.add('scale-in');
+
+  currentTeamIndex = 0;
+  updateRoundInfo();
+  showTeam();
+  updateScoreBadge();
+}
+
+/* ===== ROUND INFO ===== */
+function updateRoundInfo() {
+  document.getElementById("roundInfo").innerText =
+    `Tour ${roundNumber} — Manche ${turnNumber}/${teams.length}`;
+}
+
+/* ===== TEAM DISPLAY ===== */
+function showTeam() {
+  const team = teams[order[currentTeamIndex]];
+  const teamNameEl = document.getElementById("teamName");
+  teamNameEl.innerText = team.name;
+  teamNameEl.style.color = team.color;
+  teamNameEl.style.borderColor = team.color + '30';
+  teamNameEl.style.boxShadow = `0 0 25px ${team.color}15`;
+}
+
+/* ===== SCORE BADGE ===== */
+function updateScoreBadge() {
+  const team = teams[order[currentTeamIndex]];
+  document.getElementById("currentScore").innerText = team.score;
+  document.getElementById("currentScore").style.color = team.color;
+}
+
+/* ===== ROUND ===== */
+function startRound() {
+  document.getElementById("goBtn").style.display = "none";
+  document.getElementById("actionButtons").style.display = "flex";
+
+  timeLeft = ROUND_TIME;
+  nextWord();
+  updateTimer();
+  updateTimerRing();
+
+  timer = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    updateTimerRing();
+
+    // Bip compte à rebours des 10 dernières secondes
+    if (timeLeft > 0 && timeLeft <= 10) {
+      playCountdownBeep(timeLeft);
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      document.getElementById("gong").play();
+      showFeedback("Temps écoulé", "feedback-pass");
+
+      document.getElementById("actionButtons").style.display = "none";
+
+      setTimeout(() => {
+        document.getElementById("goBtn").style.display = "inline-flex";
+        nextTeam();
+      }, 2500);
+    }
+  }, 1000);
+}
+
+/* ===== TIMER ===== */
+function updateTimer() {
+  let m = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  let s = String(timeLeft % 60).padStart(2, "0");
+  const timerEl = document.getElementById("timer");
+  timerEl.innerText = `${m}:${s}`;
+
+  timerEl.classList.remove('warning', 'danger');
+  if (timeLeft <= 10) {
+    timerEl.classList.add('danger');
+  } else if (timeLeft <= 20) {
+    timerEl.classList.add('warning');
+  }
+}
+
+function updateTimerRing() {
+  const progress = document.getElementById("timerProgress");
+  const percentage = (timeLeft / ROUND_TIME) * 100;
+  const rotation = (percentage / 100) * 360 - 90;
+  progress.style.transform = `rotate(${rotation}deg)`;
+
+  progress.classList.remove('warning', 'danger');
+  if (timeLeft <= 10) {
+    progress.classList.add('danger');
+  } else if (timeLeft <= 20) {
+    progress.classList.add('warning');
+  }
+}
+
+/* ===== WORDS ===== */
+function nextWord() {
+  if (pool.length === 0) {
+    pool = [...categories[categorySelect.value]];
+  }
+
+  let index = Math.floor(Math.random() * pool.length);
+  currentWord = pool.splice(index, 1)[0];
+
+  const wordEl = document.getElementById("word");
+  wordEl.innerText = currentWord;
+  wordEl.style.animation = 'none';
+  wordEl.offsetHeight;
+  wordEl.style.animation = 'wordAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+}
+
+/* ===== FEEDBACK ===== */
+function showFeedback(text, className) {
+  const overlay = document.getElementById("feedbackOverlay");
+  const feedbackText = document.getElementById("feedbackText");
+  feedbackText.innerText = text;
+  feedbackText.className = "feedback-text " + className;
+  overlay.classList.add("active");
+
+  setTimeout(() => {
+    overlay.classList.remove("active");
+  }, 1200);
+}
+
+/* ===== ACTIONS ===== */
+function passWord() {
+  document.getElementById("pass").play();
+  pool.push(currentWord);
+  showFeedback("Passé !", "feedback-pass");
+  setTimeout(() => nextWord(), 400);
+}
+
+function validateWord() {
+  document.getElementById("success").play();
+  teams[order[currentTeamIndex]].score++;
+  updateScoreBadge();
+  showFeedback("+1 point !", "feedback-success");
+  setTimeout(() => nextWord(), 400);
+}
+
+/* ===== TEAM FLOW ===== */
+function nextTeam() {
+  document.getElementById("word").innerHTML = '<span class="word-placeholder">Appuie sur GO pour commencer</span>';
+  document.getElementById("timerProgress").style.transform = 'rotate(-90deg)';
+  document.getElementById("timer").classList.remove('warning', 'danger');
+  document.getElementById("timer").innerText = "01:00";
+
+  currentTeamIndex++;
+  turnNumber++;
+
+  if (currentTeamIndex >= order.length) {
+    currentTeamIndex = 0;
+    turnNumber = 1;
+    roundNumber++;
+    order = [...order].sort(() => Math.random() - 0.5);
+  }
+
+  updateRoundInfo();
+  showTeam();
+  updateScoreBadge();
+}
+
+/* ===== CONFETTI (LEAF STYLE) ===== */
+function createConfetti() {
+  const container = document.getElementById("confettiContainer");
+  container.innerHTML = "";
+  const colors = ['#6b8e4e', '#8fbc5a', '#4a90a4', '#b8956a', '#4a8c5f', '#d4a843', '#a8a8a8', '#b87333'];
+
+  for (let i = 0; i < 80; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 2 + 's';
+    confetti.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    confetti.style.width = (8 + Math.random() * 10) + 'px';
+    confetti.style.height = (8 + Math.random() * 10) + 'px';
+    container.appendChild(confetti);
+  }
+
+  setTimeout(() => {
+    container.innerHTML = "";
+  }, 5000);
+}
+
+/* ===== END GAME ===== */
+function endGame() {
+  clearInterval(timer);
+
+  let sorted = [...teams].sort((a, b) => b.score - a.score);
+
+  let html = `
+    <div class="podium-title">🏆 Podium</div>
+    <div class="podium-list">
+  `;
+
+  sorted.forEach((t, i) => {
+    let rankClass = '';
+    let medal = '';
+    if (i === 0) { rankClass = 'gold'; medal = '🥇'; }
+    else if (i === 1) { rankClass = 'silver'; medal = '🥈'; }
+    else if (i === 2) { rankClass = 'bronze'; medal = '🥉'; }
+    else { medal = '•'; }
+
+    html += `
+      <div class="podium-item" style="border-left: 3px solid ${t.color}60;">
+        <div class="podium-rank ${rankClass}">${medal}</div>
+        <div class="podium-name" style="color: ${t.color};">${t.name}</div>
+        <div class="podium-score">${t.score} pts</div>
+      </div>
+    `;
+  });
+
+  html += `
+    </div>
+    <div class="btn-center" style="margin-top: 30px;">
+      <button class="btn btn-primary" onclick="location.reload()">
+        <span>🌿</span> Nouvelle partie
+      </button>
+    </div>
+  `;
+
+  document.getElementById("game").classList.add('hidden');
+  document.getElementById("podium").innerHTML = html;
+  document.getElementById("podium").style.display = "block";
+  document.getElementById("podium").classList.add('scale-in');
+
+  createConfetti();
+}
+
+</script>
+
+</body>
+</html>
