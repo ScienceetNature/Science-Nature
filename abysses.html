@@ -26,6 +26,18 @@
         html {
             overflow-x: hidden;
             width: 100%;
+            /* La "barre grise" tout à droite de l'écran est la barre de défilement
+               native du navigateur (confirmé par analyse des pixels : gris uniforme,
+               pleine hauteur, à l'emplacement exact d'une scrollbar). Comme la page a
+               déjà sa propre règle de profondeur comme repère visuel de position, on la
+               masque pour un rendu plus soigné — le défilement (molette, trackpad,
+               tactile, clavier) continue de fonctionner normalement, seule la barre
+               visuelle disparaît. */
+            scrollbar-width: none; /* Firefox */
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
         }
 
         * {
@@ -40,7 +52,14 @@
             font-family: var(--font-body);
             color: #ffffff;
             overflow-x: hidden;
-            background-color: #000000;
+            /* CORRECTIF : lors d'un scroll très rapide, le navigateur peut mettre un
+               instant à peindre le grand dégradé .ocean-light-glow dans les zones qui
+               viennent d'apparaître. Ce qui se voit pendant ce court instant, c'est le
+               fond de <body> lui-même. En noir pur, ça donnait un flash noir subliminal
+               même dans les zones peu profondes censées être bleues. En bleu de surface,
+               ce même instant devient invisible dans les zones peu profondes (la bonne
+               couleur y est déjà), et à peine perceptible en profondeur (déjà sombre). */
+            background-color: var(--color-sea-top);
             height: 50000px; /* Ajusté dynamiquement par le JS */
         }
 
@@ -190,7 +209,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 12000px;
+            /* Hauteur posée dynamiquement en JS (dépend de l'échelle de profondeur) */
             pointer-events: none;
             z-index: 1;
         }
@@ -200,10 +219,18 @@
             width: 100%;
             height: 3000px;
         }
-        .glow-segment-1 { top: 0;     background: linear-gradient(to bottom, var(--color-sea-top) 0%, #0c356a 80%, #0a305f 100%); }
-        .glow-segment-2 { top: 3000px; background: linear-gradient(to bottom, #0a305f 0%, #011627 100%); }
-        .glow-segment-3 { top: 6000px; background: linear-gradient(to bottom, #011627 0%, #010b14 100%); }
-        .glow-segment-4 { top: 9000px; background: linear-gradient(to bottom, #010b14 0%, #000000 100%); }
+        /* CORRECTIF : les segments n'ont plus de top/height fixes en px ici — ils sont
+           calculés dynamiquement en JS à partir de la profondeur réelle (depthToPx),
+           pour rester alignés sur les vraies zones océaniques (200m / 1000m / 4000m)
+           quelle que soit l'échelle de dilatation de la zone épipélagique. Avant ce
+           correctif, ces segments gardaient des positions fixes en pixels alors que la
+           dilatation de la zone épipélagique a été appliquée par-dessus : résultat, le
+           noir complet (censé arriver vers 850m) était atteint dès ~140m de profondeur
+           réelle — d'où l'impression que "la nuit tombe trop vite". */
+        .glow-segment-1 { background: linear-gradient(to bottom, var(--color-sea-top) 0%, #0c356a 80%, #0a305f 100%); }
+        .glow-segment-2 { background: linear-gradient(to bottom, #0a305f 0%, #011627 100%); }
+        .glow-segment-3 { background: linear-gradient(to bottom, #011627 0%, #010b14 100%); }
+        .glow-segment-4 { background: linear-gradient(to bottom, #010b14 0%, #000000 100%); }
 
         /* ============================================================
            4. NEIGE MARINE SUR 3 PLANS DE PROFONDEUR (PARALLAXE)
@@ -477,8 +504,43 @@
             align-items: center;
             text-align: center;
             z-index: 6;
+            /* CORRECTIF : content-visibility n'est plus posé ici (voir .animal-visual
+               plus bas). Posé directement sur .animal-card, il applique un contain:paint
+               implicite à TOUT le sous-arbre, y compris le tooltip d'anecdote positionné
+               au-dessus de la carte (bottom:100%, donc hors de sa boîte) — il se
+               retrouvait rogné/invisible. Idem pour le nom/nom latin/taille : dès que la
+               carte était étroite (petits animaux, ex. tailleRelative:"7vw"), le texte qui
+               dépassait cette largeur était tronqué au lieu de simplement passer à la
+               ligne. En déplaçant content-visibility sur un wrapper interne qui ne
+               contient QUE l'image/vidéo, le tooltip et le texte redeviennent des enfants
+               directs de .animal-card (donc jamais rognés), tout en conservant le gain
+               CPU là où il compte vraiment : le décodage/rendu de l'image ou de la vidéo. */
+        }
+
+        /* Wrapper interne : ne contient que l'image/vidéo, dimensionné par tailleRelative.
+           C'est LUI qui porte le content-visibility (le gros du coût de rendu). */
+        .animal-visual {
             content-visibility: auto;
-            contain-intrinsic-size: 220px 300px;
+            contain-intrinsic-size: 260px 260px;
+            /* CORRECTIF : content-visibility applique un contain:paint implicite, qui
+               rognait l'animation de nage (translateY jusqu'à -12px) et le halo au
+               survol (drop-shadow flou 25px) dès qu'ils dépassaient la boîte exacte de
+               l'image — d'où le radiolaire "coupé" en haut de son mouvement. On ajoute
+               une marge de respiration interne (padding), compensée par une marge
+               négative de même valeur pour ne PAS agrandir l'empreinte de la carte dans
+               la mise en page (le texte/centrage restent identiques) : cela donne de
+               l'espace à ces effets sans jamais les rogner. */
+            box-sizing: content-box;
+            padding: 40px;
+            margin: -40px;
+            /* CORRECTIF : masque estompant les bords carrés, déplacé ici (voir
+               commentaire détaillé sur .animal-card img plus bas). Les arrêts sont
+               calculés pour que le fondu commence APRÈS la zone de padding (donc après
+               la photo elle-même ET la marge réservée au halo/à l'animation), et ne
+               termine qu'au tout bord du wrapper — le halo a ainsi toute la place du
+               padding pour s'estomper en douceur au lieu d'être coupé net. */
+            mask-image: radial-gradient(circle, black 60%, transparent 92%);
+            -webkit-mask-image: radial-gradient(circle, black 60%, transparent 92%);
         }
 
         .pos-gauche { left: 12%; }
@@ -495,7 +557,7 @@
 
         .animal-card img,
         .animal-card video {
-            width: 100%; /* S'adapte à la taille de la carte configurée en JS */
+            width: 100%; /* S'adapte à la taille du wrapper .animal-visual (configurée en JS) */
             height: auto;
             aspect-ratio: 1 / 1; /* Réserve une place approximative tant que le média charge */
             object-fit: contain;
@@ -504,6 +566,13 @@
             --img-scale: 1;
             animation: swimAnimation 6s ease-in-out infinite;
             background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+            /* CORRECTIF : le masque qui estompe les bords carrés (voir .animal-visual
+               ci-dessus) a été déplacé sur le wrapper .animal-visual plutôt que posé ici.
+               Raison : posé directement sur l'image, son bord à 100% correspondait à la
+               boîte EXACTE de l'image — et rognait donc aussi le halo au survol
+               (drop-shadow flou 25px), qui déborde justement de cette boîte. En le
+               déplaçant sur le wrapper (qui a de la marge grâce au padding ci-dessus),
+               le halo a la place de s'estomper progressivement au lieu d'être coupé net. */
         }
         /* Image et vidéo restent invisibles jusqu'au chargement réel, puis
            apparaissent en fondu — la marge de 200m laisse largement le temps
@@ -524,6 +593,14 @@
             --img-scale: 1.04;
         }
 
+        /* CORRECTIF : largeur mini + max-width raisonnable pour que le nom d'un animal
+           reste lisible (passe à la ligne proprement) même quand tailleRelative est très
+           petit (ex. "7vw" pour une larve minuscule) — indépendamment de la taille de
+           l'image, qui elle continue de suivre fidèlement tailleRelative. */
+        .animal-name, .animal-latin, .animal-size {
+            max-width: max(170px, 30vw);
+            min-width: 90px;
+        }
         .animal-name { font-size: 1.1rem; font-weight: 600; margin-top: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
         .animal-latin { font-size: 0.85rem; font-style: italic; opacity: 0.6; margin-top: 2px; }
         .animal-size { font-size: 0.8rem; opacity: 0.4; margin-top: 2px; }
@@ -545,7 +622,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
             color: #ffffff;
-            contain: layout style paint;
         }
         .animal-card:hover .animal-tooltip { opacity: 1; transform: translateY(-10px); }
 
@@ -971,7 +1047,7 @@
       },
 
       {
-          nom: "Poisson Termomètre",
+          nom: "Poisson Thermomètre",
           nomLatin: "Carapus acus",
           taille: "20 cm",
           tailleRelative: "15vw",
@@ -1337,7 +1413,7 @@
           nomLatin: "Cyanea capillata",
           taille: "36.5 m",
           tailleRelative: "25vw",
-          profondeur: 26,
+          profondeur: 41,
           anecdote: "La plus grosse méduse du monde qui possède 800 tentacules ! ",
           position: "milieu",
           image: "images/icone/medusec.webm",
@@ -1997,7 +2073,6 @@
       }
     ];
 
-
         // ============================================================
         // ECHELLE DE PROFONDEUR NON-UNIFORME (OBLIGATOIRE)
         // ------------------------------------------------------------
@@ -2014,7 +2089,8 @@
         // Au-delà de 200m, l'échelle redevient celle d'origine (14px/m).
         // ============================================================
         const PPM_NORMAL = 14;            // px par mètre au-delà de 200m (inchangé)
-        const PPM_EPI = 42;                // px par mètre entre 0 et 200m (x3, zone dilatée)
+        const EPI_DILATION_FACTOR = 6;    // x6 : palier "encore plus prononcé" demandé (précédemment x3)
+        const PPM_EPI = PPM_NORMAL * EPI_DILATION_FACTOR; // px par mètre entre 0 et 200m
         const EPI_DEPTH_LIMIT = 200;       // m — bornes de la zone épipélagique
         const EPI_PX_HEIGHT = EPI_DEPTH_LIMIT * PPM_EPI; // hauteur en px allouée à cette zone
 
@@ -2060,6 +2136,42 @@
         document.body.style.height = `${totalAbyssHeight + window.innerHeight + 500}px`;
         floorElement.style.top = `${totalAbyssHeight}px`; // CORRIGÉ : Plus de double décalage de surface
 
+        // ============================================================
+        // CORRECTIF LUMINOSITÉ : positionnement du dégradé de profondeur
+        // ------------------------------------------------------------
+        // Les 4 segments assombrissants sont calés sur les VRAIES zones
+        // océaniques (mêmes seuils que le texte de zone affiché à l'écran :
+        // 200m / 1000m / 4000m) via depthToPx(), plutôt que sur des valeurs
+        // fixes en pixels. Ainsi, quelle que soit l'échelle de dilatation
+        // appliquée à la zone épipélagique, l'obscurité progresse toujours
+        // au bon rythme par rapport à la profondeur réelle.
+        // ============================================================
+        const oceanLightGlow = document.querySelector('.ocean-light-glow');
+        const glowSeg1 = document.querySelector('.glow-segment-1');
+        const glowSeg2 = document.querySelector('.glow-segment-2');
+        const glowSeg3 = document.querySelector('.glow-segment-3');
+        const glowSeg4 = document.querySelector('.glow-segment-4');
+
+        const glowDepth0 = 0;
+        const glowDepth200 = depthToPx(200);     // fin de la zone épipélagique (encore bien éclairée)
+        const glowDepth1000 = depthToPx(1000);    // fin de la zone mésopélagique ("crépusculaire" -> quasi nuit)
+        const glowDepth4000 = depthToPx(4000);    // fin de la zone bathypélagique (noir complet)
+        const glowDepthEnd = totalAbyssHeight;    // jusqu'au fond de la fosse (déjà noir depuis longtemps)
+
+        glowSeg1.style.top = `${glowDepth0}px`;
+        glowSeg1.style.height = `${glowDepth200 - glowDepth0}px`;
+
+        glowSeg2.style.top = `${glowDepth200}px`;
+        glowSeg2.style.height = `${glowDepth1000 - glowDepth200}px`;
+
+        glowSeg3.style.top = `${glowDepth1000}px`;
+        glowSeg3.style.height = `${glowDepth4000 - glowDepth1000}px`;
+
+        glowSeg4.style.top = `${glowDepth4000}px`;
+        glowSeg4.style.height = `${Math.max(0, glowDepthEnd - glowDepth4000)}px`;
+
+        oceanLightGlow.style.height = `${glowDepthEnd}px`;
+
         // GENERATION DES ANIMAUX AVEC TAILLE CUSTOMISEE
         const depthImageQueue = []; // {img, src, profondeur} — alimente le chargement progressif ci-dessous
         // OPTIM CPU : lookup O(1) par élément carte plutôt qu'un .find() en O(n) (56 animaux)
@@ -2068,7 +2180,8 @@
         animaux.forEach((animal) => {
             const card = document.createElement('div');
             card.className = `animal-card pos-${animal.position}`;
-            card.style.width = animal.tailleRelative;
+            // CORRECTIF : la largeur n'est plus posée directement sur .animal-card
+            // (voir .animal-visual plus bas et les commentaires CSS associés).
 
             const topPosition = depthToPx(animal.profondeur); // échelle non-uniforme (zone épipélagique dilatée)
             card.style.top = `${topPosition}px`;
@@ -2086,7 +2199,7 @@
 
             card.innerHTML = `
                 <div class="animal-tooltip">${animal.anecdote}</div>
-                ${mediaTag}
+                <div class="animal-visual" style="width:${animal.tailleRelative}">${mediaTag}</div>
                 <div class="animal-name">${animal.nom}</div>
                 <div class="animal-latin">${animal.nomLatin}</div>
                 <div class="animal-size">Taille : ${animal.taille}</div>
@@ -2639,6 +2752,7 @@
                 mediaElement.src = mediaPath;
                 mediaElement.autoplay = true;
                 mediaElement.controls = true;
+                mediaElement.muted = true; // demandé : toutes les vidéos mediaClick sont muettes à l'ouverture
                 mediaElement.className = 'inserted-media';
                 mediaElement.onended = () => { closePopup(); };
             } else {
