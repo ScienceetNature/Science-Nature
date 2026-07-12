@@ -52,14 +52,15 @@
             font-family: var(--font-body);
             color: #ffffff;
             overflow-x: hidden;
-            /* CORRECTIF : lors d'un scroll très rapide, le navigateur peut mettre un
-               instant à peindre le grand dégradé .ocean-light-glow dans les zones qui
-               viennent d'apparaître. Ce qui se voit pendant ce court instant, c'est le
-               fond de <body> lui-même. En noir pur, ça donnait un flash noir subliminal
-               même dans les zones peu profondes censées être bleues. En bleu de surface,
-               ce même instant devient invisible dans les zones peu profondes (la bonne
-               couleur y est déjà), et à peine perceptible en profondeur (déjà sombre). */
-            background-color: var(--color-sea-top);
+            /* Fond de repli en noir : lors d'un scroll très rapide, le navigateur peut
+               mettre un instant à peindre le grand dégradé .ocean-light-glow dans les
+               zones qui viennent d'apparaître, et c'est ce fond qui se voit brièvement.
+               Le noir reste le choix le plus sûr car il correspond à la couleur réelle
+               de la majorité de la page (le noir commence dès 4000m, soit ~58% de la
+               hauteur totale) — un bref flash y est donc invisible. Un essai en bleu de
+               surface a été fait puis écarté : il rendait le flash bien plus visible et
+               plus fréquent dans les abysses, qui occupent la majorité du parcours. */
+            background-color: #000000;
             height: 50000px; /* Ajusté dynamiquement par le JS */
         }
 
@@ -531,6 +532,9 @@
                la mise en page (le texte/centrage restent identiques) : cela donne de
                l'espace à ces effets sans jamais les rogner. */
             box-sizing: content-box;
+            /* padding/margin réels posés en inline par le JS (proportionnels à la
+               taille de chaque animal — voir génération des cartes) ; ces valeurs
+               ne servent que de repli si jamais l'inline venait à manquer. */
             padding: 40px;
             margin: -40px;
             /* CORRECTIF : masque estompant les bords carrés, déplacé ici (voir
@@ -1015,9 +1019,9 @@
           nomLatin: "Macropinna microstoma",
           taille: "15 cm",
           tailleRelative: "10vw",
-          profondeur: 2300,
+          profondeur: 2380,
           anecdote: "Sa tête est transparente et ses yeux tubulaires peuvent pivoter vers le haut ou vers l'avant",
-          position: "droite",
+          position: "milieu-gauche",
           image: "images/icone/poissonrev.webm",
           mediaClick: "images/PoissonRevenant.mp4"
       },
@@ -1039,7 +1043,7 @@
           nomLatin: "Alcyonacea sp.",
           taille: "2 m",
           tailleRelative: "18vw",
-          profondeur: 3220,
+          profondeur: 3280,
           anecdote: "Contrairement à ses cousins photosynthétiques, ce corail filtre l’eau pour se nourrir. Il grandit de quelques millimètres chaque année.",
           position: "gauche",
           image: "images/icone/alcyo.webm",
@@ -1075,9 +1079,9 @@
           nomLatin: "Diploria labyrinthiformis",
           taille: "2 m",
           tailleRelative: "10vw",
-          profondeur: 1,
+          profondeur: 2,
           anecdote: "Certains coraux construisent des récifs visibles depuis l'espace.",
-          position: "milieu",
+          position: "droite",
           image: "images/icone/Diploria .webp",
           mediaClick: "images/corailc.webp"
       },
@@ -1112,9 +1116,9 @@
           nomLatin: "Grimpoteuthis sp.",
           taille: "30 cm",
           tailleRelative: "11vw",
-          profondeur: 7000,
+          profondeur: 7150,
           anecdote: "Utilise des nageoires rappelant les oreilles de Dumbo.",
-          position: "milieu",
+          position: "milieu-droite",
           image: "images/icone/pieuvreD.webm",
           mediaClick: "images/pieuvredumbo.mp4"
       },
@@ -1124,9 +1128,9 @@
           nomLatin: "Salmon salar",
           taille: "150 cm",
           tailleRelative: "15vw",
-          profondeur: 6,
+          profondeur: 12,
           anecdote: "Les saumons retournent dans la rivière où ils ont vu le jour, pour se reproduire.",
-          position: "droite",
+          position: "milieu",
           image: "images/icone/saumon.webm",
           mediaClick: "images/pyramide.webp"
       },
@@ -1272,7 +1276,7 @@
           tailleRelative: "19vw",
           profondeur: 1620,
           anecdote: "Son corps devient transparent à l'âge adulte.",
-          position: "milieu-gauche",
+          position: "gauche",
           image: "images/icone/calmarca.webm",
           mediaClick: "images/calmarc.webp"
       },
@@ -1282,7 +1286,7 @@
           nomLatin: "Lepas anatifera",
           taille: "10 cm",
           tailleRelative: "8vw",
-          profondeur: 1,
+          profondeur: 3,
           anecdote: "Son pénis peut atteindre 8 fois la longueur de son corps, record du règne animal. S’il ne trouve aucun partenaire à proximité, il s’autoféconde !",
           position: "milieu-gauche",
           image: "images/icone/Lepas.webp",
@@ -1306,7 +1310,7 @@
           nomLatin: "Macrocheira kaempferi",
           taille: "3.8 m",
           tailleRelative: "35vw",
-          profondeur: 600,
+          profondeur: 640,
           anecdote: "Plus grand arthropode vivant du monde.",
           position: "milieu",
           image: "images/icone/crabea.webm",
@@ -1327,10 +1331,10 @@
 
       {
           nom: "Poisson-Ogre",
-          nomLatin: "Atolla wyvillei",
+          nomLatin: "Anoplogaster cornuta",
           taille: "18 cm",
           tailleRelative: "15vw",
-          profondeur: 5010,
+          profondeur: 5040,
           anecdote: "Possède les plus grandes dents proportionnellement à la taille du corps chez les poissons.",
           position: "droite",
           image: "images/icone/poissonogre.webm",
@@ -1425,7 +1429,7 @@
           nomLatin: "Dasyatis brevicaudata",
           taille: "2 m",
           tailleRelative: "25vw",
-          profondeur: 156,
+          profondeur: 165,
           anecdote: "Le 4 septembre 2006, Steve Irwin est mortellement piqué au cœur par une raie pastenague alors qu'il plongeait pour un tournage.",
           position: "milieu",
           image: "images/icone/raiepa.webm",
@@ -1438,7 +1442,7 @@
           nomLatin: "Mitsukurina owstoni",
           taille: "3.8 m",
           tailleRelative: "25vw",
-          profondeur: 1300,
+          profondeur: 1362,
           anecdote: "Véritable fossile vivant, sa mâchoire se projette littéralement vers l'avant pour capturer ses proies.",
           position: "gauche",
           image: "images/icone/requinlutin.webm",
@@ -1522,7 +1526,7 @@
           nomLatin: "Architeuthis dux",
           taille: "12 m",
           tailleRelative: "50vw",
-          profondeur: 1500,
+          profondeur: 1580,
           anecdote: "Ses yeux ont la taille d'une assiette pour capter la moindre lueur dans le noir absolu.",
           position: "droite",
           image: "images/icone/calmargeant.webm",
@@ -1606,7 +1610,7 @@
           nomLatin: "Phronima sedentaria",
           taille: "3 cm",
           tailleRelative: "10vw",
-          profondeur: 1000,
+          profondeur: 1050,
           anecdote: "A inspiré le monstre du film Alien selon plusieurs biologistes.",
           position: "droite",
           image: "images/icone/tonnelier.webm",
@@ -1666,9 +1670,9 @@
           nomLatin: "Chelonia mydas",
           taille: "1.5 m",
           tailleRelative: "16vw",
-          profondeur: 1200,
+          profondeur: 1196,
           anecdote: "1 individu sur 1000 parvient à l’âge adulte.",
-          position: "milieu-droite",
+          position: "droite",
           image: "images/icone/tortuem.webm",
           mediaClick: "images/tortuem.webp"
       },
@@ -1702,7 +1706,7 @@
           nomLatin: "Dinochelus ausubeli",
           taille: "30 cm",
           tailleRelative: "20vw",
-          profondeur: 900,
+          profondeur: 881,
           anecdote: "Découvert seulement en 2007 malgré sa taille imposante.",
           position: "gauche",
           image: "images/icone/dinochelus.webm",
@@ -1714,9 +1718,9 @@
           nomLatin: "Chimaera monstrosa",
           taille: "1.5 m",
           tailleRelative: "16vw",
-          profondeur: 2600,
+          profondeur: 2650,
           anecdote: "Plus proches parentes des requins que des poissons osseux. Leur lignée existe depuis plus de 400 millions d'années.",
-          position: "milieu-droite",
+          position: "milieu-gauche",
           image: "images/icone/chimere.webm",
           mediaClick: "images/chimere.mp4"
       },
@@ -1812,7 +1816,7 @@
           tailleRelative: "13vw",
           profondeur: 3500,
           anecdote: "Éponge carnivore qui capture de petits crustacés.",
-          position: "gauche",
+          position: "milieu",
           image: "images/icone/epongeh.webm",
           mediaClick: "images/epongelire.mp4"
       },
@@ -1822,7 +1826,7 @@
           nomLatin: "Eurypharynx pelecanoides",
           taille: "1 m",
           tailleRelative: "20vw",
-          profondeur: 4000,
+          profondeur: 4070,
           anecdote: "Sa bouche immense peut engloutir des proies plus grosses que lui.",
           position: "gauche",
           image: "images/icone/gulpereel.webm",
@@ -1834,7 +1838,7 @@
           nomLatin: "Radiolaria sp",
           taille: "0.2 mm",
           tailleRelative: "2vw",
-          profondeur: 400,
+          profondeur: 439,
           anecdote: "Les radiolaires sont des animaux microscopiques qui construisent des squelettes minéraux aux formes très esthétiques.",
           position: "milieu",
           image: "images/icone/radiolaria.webp",
@@ -1847,7 +1851,7 @@
           nomLatin: "Regalecus glesne",
           taille: "11 m",
           tailleRelative: "30vw",
-          profondeur: 1000,
+          profondeur: 958,
           anecdote: "Plus long poisson osseux connu.",
           position: "gauche",
           image: "images/icone/regalec1.webm",
@@ -1908,7 +1912,7 @@
           nomLatin: "Turritopsis dohrnii",
           taille: "1 cm",
           tailleRelative: "9vw",
-          profondeur: 220,
+          profondeur: 191,
           anecdote: "C'est l’un des rares cas connus d’animaux capables de revenir complètement à une phase sexuellement immature, faisant d’elle un animal biologiquement immortel.",
           position: "droite",
           image: "images/icone/meduseAUR.webm",
@@ -1932,7 +1936,7 @@
           nomLatin: "Vampyroteuthis infernalis",
           taille: "30 cm",
           tailleRelative: "23vw",
-          profondeur: 3120,
+          profondeur: 3195,
           anecdote: "Son nom signifie calmar vampire de l'enfer. Il ne boit pourtant pas de sang.",
           position: "milieu",
           image: "images/icone/vampire.webm",
@@ -1969,7 +1973,7 @@
           nomLatin: "Tursiops truncatus",
           taille: "4 m",
           tailleRelative: "23vw",
-          profondeur: 5,
+          profondeur: 20,
           anecdote: "Certaines espèces de dauphins utilisent la toxine de poisson globe pour se droguer.",
           position: "gauche",
           image: "images/icone/dauphin.webm",
@@ -1981,7 +1985,7 @@
           nomLatin: "Tiburonia granrojo",
           taille: "1 m",
           tailleRelative: "22vw",
-          profondeur: 1620,
+          profondeur: 1680,
           anecdote: "Cette méduse géante rouge ne possède pas de longs tentacules comme la plupart des méduses. Elle n'a été découverte qu'en 2003.",
           position: "droite",
           image: "images/icone/tiburonia.webm",
@@ -2029,7 +2033,7 @@
           nomLatin: "Psychrolutes marcidus",
           taille: "30 cm",
           tailleRelative: "10vw",
-          profondeur: 1140,
+          profondeur: 1130,
           anecdote: "Son apparence gélatineuse n'est visible qu'en dehors de son habitat profond.",
           position: "milieu",
           image: "images/icone/blobfish.webm",
@@ -2041,9 +2045,9 @@
           nomLatin: "Bathypterois grallator",
           taille: "40 cm",
           tailleRelative: "14vw",
-          profondeur: 6000,
+          profondeur: 5975,
           anecdote: "Se tient debout sur trois rayons géants comme sur des échasses.",
-          position: "droite",
+          position: "milieu",
           image: "images/icone/poissontrepied.webm",
           mediaClick: "images/poissontrepied.webp"
       },
@@ -2072,6 +2076,7 @@
           mediaClick: "images/limacemarianne.mp4"
       }
     ];
+
 
         // ============================================================
         // ECHELLE DE PROFONDEUR NON-UNIFORME (OBLIGATOIRE)
@@ -2197,9 +2202,23 @@
                 ? `<video data-src="${animal.image}" class="depth-lazy-img" muted loop playsinline webkit-playsinline preload="auto"></video>`
                 : `<img data-src="${animal.image}" alt="${animal.nom}" class="depth-lazy-img">`;
 
+            // CORRECTIF : marge de respiration (padding/masque) proportionnelle à la taille
+            // de CHAQUE animal, plutôt qu'une valeur fixe de 40px. Pour un tout petit
+            // animal, 40px suffisaient largement ; mais pour un très grand élément
+            // (ex. "60vw"), 40px ne représentent presque rien à l'échelle de l'image : le
+            // masque commençait alors à s'estomper À L'INTÉRIEUR de l'image elle-même,
+            // au lieu de rester dans la marge — d'où la coupe encore visible sur le
+            // Titanic. En exprimant le padding dans la MÊME unité que tailleRelative
+            // (proportionnel, avec un plancher pour les tout petits animaux), la marge
+            // reste toujours une fraction cohérente de la taille réelle affichée.
+            const tailleMatch = animal.tailleRelative.match(/^([\d.]+)(\D+)$/);
+            const tailleNum = tailleMatch ? parseFloat(tailleMatch[1]) : 20;
+            const tailleUnit = tailleMatch ? tailleMatch[2] : 'vw';
+            const visualPadding = Math.max(3, tailleNum * 0.18);
+
             card.innerHTML = `
                 <div class="animal-tooltip">${animal.anecdote}</div>
-                <div class="animal-visual" style="width:${animal.tailleRelative}">${mediaTag}</div>
+                <div class="animal-visual" style="width:${animal.tailleRelative}; padding:${visualPadding}${tailleUnit}; margin:-${visualPadding}${tailleUnit};">${mediaTag}</div>
                 <div class="animal-name">${animal.nom}</div>
                 <div class="animal-latin">${animal.nomLatin}</div>
                 <div class="animal-size">Taille : ${animal.taille}</div>
