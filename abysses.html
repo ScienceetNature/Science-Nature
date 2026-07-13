@@ -2160,14 +2160,30 @@
         const HERO_PIXEL_HEIGHT = window.innerHeight;
         document.querySelector('.surface').style.height = `${HERO_PIXEL_HEIGHT}px`;
 
-        // Recalcule seulement si la LARGEUR change (rotation/redimensionnement réel) —
-        // on ignore volontairement les changements de hauteur seule, qui correspondent
-        // le plus souvent à la barre d'adresse mobile qui apparaît/disparaît au scroll.
-        let lastKnownWidth = window.innerWidth;
+        // Recharge uniquement lors d'un VRAI changement d'orientation (portrait <-> paysage) —
+        // CORRECTIF BUG : l'ancienne version comparait juste innerWidth avant/après, en
+        // ignorant les changements de hauteur seule (barre d'adresse mobile). Mais sur
+        // certains téléphones Android, cette même barre d'adresse qui apparaît/disparaît
+        // pendant le scroll peut aussi faire varier innerWidth de quelques pixels (pas
+        // seulement innerHeight) — ce qui déclenchait un rechargement en pleine page
+        // pendant un simple scroll (page qui "saute" au sommet puis se re-scrolle).
+        // Ce phénomène était absent sur PC/Firefox/Chrome et sur tablette (barre d'adresse
+        // moins souvent rétractable), d'où le bug qui semblait spécifique aux petits écrans.
+        // Le nouveau test : (1) se base sur l'ORIENTATION réelle de l'écran, pas sur une
+        // simple comparaison de largeur en pixels — un changement de barre d'adresse ne
+        // change jamais l'orientation ; (2) attend que la taille se stabilise (aucun
+        // nouvel évènement resize pendant 500ms) avant de vérifier, pour ignorer les
+        // évènements intermédiaires pendant l'animation d'apparition/disparition.
+        let lastIsPortrait = window.matchMedia('(orientation: portrait)').matches;
+        let resizeSettleTimer = null;
         window.addEventListener('resize', () => {
-            if (window.innerWidth !== lastKnownWidth) {
-                location.reload();
-            }
+            clearTimeout(resizeSettleTimer);
+            resizeSettleTimer = setTimeout(() => {
+                const isPortraitNow = window.matchMedia('(orientation: portrait)').matches;
+                if (isPortraitNow !== lastIsPortrait) {
+                    location.reload();
+                }
+            }, 500);
         });
 
         document.body.style.height = `${totalAbyssHeight + window.innerHeight + 500}px`;
