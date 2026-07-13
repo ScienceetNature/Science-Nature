@@ -51,7 +51,16 @@
         body {
             font-family: var(--font-body);
             color: #ffffff;
-            overflow-x: hidden;
+            /* CORRECTIF BUG (scroll bloqué sur Firefox desktop) : cette règle avait
+               autrefois "overflow-x: hidden;" en plus de celle déjà posée sur <html>
+               juste au-dessus. Avec les deux à la fois, le navigateur considère <html>
+               ET <body> comme deux conteneurs défilants indépendants (chacun avec une
+               hauteur de contenu supérieure à sa propre hauteur visible) — <html> suffit
+               largement à lui seul pour rogner tout débordement horizontal de la page
+               entière, y compris celui de <body>. Reproduit et confirmé : avec les deux
+               réglages simultanés, le défilement à la molette ne fonctionne plus dans au
+               moins un moteur de rendu ; avec un seul des deux (sur <html>), tout
+               fonctionne normalement, dans tous les navigateurs testés. */
             /* Fond de repli en noir : lors d'un scroll très rapide, le navigateur peut
                mettre un instant à peindre le grand dégradé .ocean-light-glow dans les
                zones qui viennent d'apparaître, et c'est ce fond qui se voit brièvement.
@@ -236,29 +245,52 @@
         /* ============================================================
            4. NEIGE MARINE SUR 3 PLANS DE PROFONDEUR (PARALLAXE)
            ============================================================ */
+        /* OPTIM CPU : auparavant, le mouvement de la neige était obtenu en modifiant
+           background-position sur un calque plein écran — une propriété qui force un
+           repaint complet à chaque mise à jour (contrairement à transform, qui reste
+           sur le compositeur GPU). Nouvelle structure : .snow-layer devient une simple
+           "fenêtre" de recadrage plein écran (overflow:hidden), et .snow-layer-fill
+           (le calque qui porte réellement le motif) est surdimensionné d'une largeur de
+           motif de chaque côté, puis déplacé via transform. Comme il déborde toujours
+           d'au moins un motif complet par rapport à la fenêtre, il n'y a jamais de bord
+           vide visible, quelle que soit la valeur de décalage. Rendu final identique au
+           pixel près, juste une technique de déplacement moins coûteuse. */
         .snow-layer {
             position: fixed;
             inset: 0;
             pointer-events: none;
             opacity: 0;
             z-index: 3;
-            background-repeat: repeat;
+            overflow: hidden;
         }
-        .snow-layer-back {
+        .snow-layer-fill {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            background-repeat: repeat;
+            will-change: transform;
+        }
+        .snow-layer-back .snow-layer-fill {
+            top: -320px;
+            height: calc(100% + 640px);
             background-size: 320px 320px;
             background-image:
                 radial-gradient(1px 1px at 30px 40px, rgba(220,230,240,0.5), transparent),
                 radial-gradient(1px 1px at 140px 200px, rgba(220,230,240,0.4), transparent),
                 radial-gradient(1px 1px at 230px 90px, rgba(220,230,240,0.45), transparent);
         }
-        .snow-layer-mid {
+        .snow-layer-mid .snow-layer-fill {
+            top: -360px;
+            height: calc(100% + 720px);
             background-size: 360px 360px;
             background-image:
                 radial-gradient(1.5px 1.5px at 50px 70px, rgba(230,240,245,0.55), transparent),
                 radial-gradient(1.4px 1.4px at 180px 240px, rgba(230,240,245,0.45), transparent),
                 radial-gradient(1.5px 1.5px at 280px 120px, rgba(230,240,245,0.5), transparent);
         }
-        .snow-layer-front {
+        .snow-layer-front .snow-layer-fill {
+            top: -400px;
+            height: calc(100% + 800px);
             background-size: 400px 400px;
             background-image:
                 radial-gradient(2.2px 2.2px at 60px 80px, rgba(240,248,250,0.75), transparent),
@@ -855,9 +887,9 @@
     </section>
 
     <!-- Point 4 : neige marine sur 3 plans de profondeur (parallaxe) -->
-    <div class="snow-layer snow-layer-back" id="snow-back"></div>
-    <div class="snow-layer snow-layer-mid" id="snow-mid"></div>
-    <div class="snow-layer snow-layer-front" id="snow-front"></div>
+    <div class="snow-layer snow-layer-back" id="snow-back"><div class="snow-layer-fill" id="snow-back-fill"></div></div>
+    <div class="snow-layer snow-layer-mid" id="snow-mid"><div class="snow-layer-fill" id="snow-mid-fill"></div></div>
+    <div class="snow-layer snow-layer-front" id="snow-front"><div class="snow-layer-fill" id="snow-front-fill"></div></div>
 
     <!-- Règle verticale de profondeur (remplace la ligne pointillée ET l'ancien compteur numérique) -->
     <div class="depth-ruler" id="depth-ruler">
@@ -970,7 +1002,7 @@
 
 
         {
-            profondeur: 10910,
+            profondeur: 10900,
             titre: "To the Moon and back",
             description: "Seulement sept personnes, dont James Cameron, sont descendues dans la fosse des Mariannes à ce jour (2026), ce qui est moins que le nombre de personnes ayant marché sur la Lune."
         },
@@ -1033,7 +1065,7 @@
           tailleRelative: "30vw",
           profondeur: 450,
           anecdote: "C’est l’animal le plus long du monde, il est constitué de plusieurs individus, qui mit bout à bout, mesure 45 m.",
-          position: "milieu",
+          position: "droite",
           image: "images/icone/sipho.webm",
           mediaClick: "images/siphonophore.webp"
       },
@@ -1164,7 +1196,7 @@
           nomLatin: "Homo sapiens (pas trop)",
           taille: "6.7 m",
           tailleRelative: "15vw",
-          profondeur: 3800,
+          profondeur: 3780,
           anecdote: "Cinq personnes trouvent la mort dans l’implosion du sous-marin à destination du Titanic. L’engin était piloté par… une manette de jeu vidéo Logitech.",
           position: "gauche",
           image: "images/icone/Titan.webp",
@@ -2285,8 +2317,15 @@
                         video.play().catch(() => {});
                     }
                     video.removeEventListener('loadeddata', onReady);
+                    video._pendingLoadedDataHandler = null;
                     if (onDone) onDone();
                 };
+                // OPTIM (point 8) : mémorise la référence sur l'élément lui-même, pour que
+                // unloadMedia() puisse la retirer proprement si le chargement est
+                // interrompu avant d'aboutir (sinon, lors d'allers-retours rapides en
+                // scroll, des écouteurs 'loadeddata' jamais déclenchés ni retirés
+                // s'accumulaient lentement sur la même vidéo).
+                video._pendingLoadedDataHandler = onReady;
                 video.addEventListener('loadeddata', onReady);
                 video.addEventListener('error', () => { if (onDone) onDone(); }, { once: true });
                 video.src = entry.src;
@@ -2307,9 +2346,24 @@
         // Décharge complètement un média (vide la source, force la libération
         // mémoire côté navigateur) et permet un rechargement futur si l'utilisateur revient.
         function unloadMedia(entry) {
-            if (!startedSrcs.has(entry.src)) return; // jamais chargé : rien à faire
             const el = entry.img;
+            // OPTIM CPU (point 6) : coupe l'animation CSS de nage tant que l'animal est
+            // hors de la marge pertinente — que son média ait déjà été chargé ou non (les
+            // animaux jamais approchés doivent eux aussi rester "éteints" dès le départ).
+            // Il était de toute façon invisible (content-visibility), mais l'animation
+            // continuait sinon de "tourner dans le vide" (recalcul de style à chaque
+            // frame). Relancée dans loadObserver dès que l'animal redevient pertinent
+            // (même marge que le chargement du média).
+            el.style.animationPlayState = 'paused';
+
+            if (!startedSrcs.has(entry.src)) return; // jamais chargé : rien d'autre à faire
             if (el.tagName === 'VIDEO') {
+                // OPTIM (point 8) : retire l'écouteur 'loadeddata' resté en attente si le
+                // chargement est interrompu avant d'avoir abouti (voir preloadAndSwap).
+                if (el._pendingLoadedDataHandler) {
+                    el.removeEventListener('loadeddata', el._pendingLoadedDataHandler);
+                    el._pendingLoadedDataHandler = null;
+                }
                 el.pause();
                 el.removeAttribute('src');
                 el.load(); // force le navigateur à relâcher les ressources de décodage
@@ -2330,6 +2384,10 @@
                 const entry = depthImageQueueByCard.get(obs.target);
                 if (!entry) return;
                 if (obs.isIntersecting) {
+                    // OPTIM CPU (point 6) : relance l'animation de nage (voir pause dans
+                    // unloadMedia ci-dessus) — même marge que le chargement du média, donc
+                    // aucune différence visible : l'animal était de toute façon invisible.
+                    entry.img.style.animationPlayState = 'running';
                     preloadAndSwap(entry, null);
                 } else {
                     unloadMedia(entry);
@@ -2338,7 +2396,14 @@
         }, { rootMargin: `${UNLOAD_MARGIN_PX}px 0px ${UNLOAD_MARGIN_PX}px 0px` });
 
         // --- Marge étroite : contrôle la lecture/pause des vidéos uniquement ---
-        const PLAY_MARGIN_PX = 400;
+        // OPTIM CPU : réduite de 400 à 200px pour restreindre la fenêtre où plusieurs
+        // vidéos peuvent jouer simultanément hors champ. Calibrage prudent : à ce stade,
+        // la vidéo est déjà entièrement chargée (via la marge bien plus large de 2800px
+        // ci-dessus), donc .play() démarre quasi instantanément — ce n'est pas un délai
+        // de chargement qu'on raccourcit, juste la fenêtre de lecture "en avance". 200px
+        // laisse encore une marge confortable (environ un quart d'écran) pour que la
+        // vidéo soit déjà en mouvement au moment où elle devient visible, sans à-coup.
+        const PLAY_MARGIN_PX = 200;
 
         const playObserver = new IntersectionObserver((entries) => {
             entries.forEach((obs) => {
@@ -2347,7 +2412,11 @@
                 const video = entry.img;
                 if (obs.isIntersecting) {
                     video.dataset.shouldPlay = 'true';
-                    if (video.readyState >= 2) video.play().catch(() => {});
+                    // OPTIM CPU (point 5) : si une popup mediaClick est ouverte, on ne
+                    // lance pas de nouvelle vidéo d'arrière-plan — le drapeau shouldPlay
+                    // reste posé, et resumeBackgroundVideos() (appelée à la fermeture de
+                    // la popup) s'en chargera à ce moment-là.
+                    if (!isMediaOpen && video.readyState >= 2) video.play().catch(() => {});
                 } else {
                     video.dataset.shouldPlay = 'false';
                     video.pause();
@@ -2400,6 +2469,8 @@
             const halfCount = RULER_POOL_SIZE / 2;
             const baseIndex = Math.round(depth / RULER_MINOR_STEP);
             const windowHalf = (depthRuler.clientHeight || 300) / 2;
+            const fadeStart = windowHalf - 10;
+            const fadeEnd = fadeStart + 20; // au-delà, l'opacité est de toute façon clampée à 0
 
             for (let i = 0; i < RULER_POOL_SIZE; i++) {
                 const tickIndex = baseIndex - halfCount + i;
@@ -2407,20 +2478,47 @@
                 const entry = rulerTicks[i];
 
                 if (tickDepth < 0) {
-                    entry.el.style.opacity = 0;
+                    if (entry.lastOpacity !== 0) {
+                        entry.el.style.opacity = 0;
+                        entry.lastOpacity = 0;
+                    }
                     continue;
                 }
 
                 const offset = (tickDepth - depth) * RULER_SCALE;
+                const dist = Math.abs(offset);
+
+                // OPTIM CPU : la grande majorité des 240 graduations se trouve hors de la
+                // petite fenêtre visible de la règle à un instant donné (~40-50 visibles au
+                // maximum). Au-delà de la zone de fondu, une graduation est garantie
+                // invisible : inutile de recalculer sa position/son texte tant qu'elle le
+                // reste — seul le passage visible ↔ invisible déclenche une écriture.
+                if (dist > fadeEnd) {
+                    if (entry.lastOpacity !== 0) {
+                        entry.el.style.opacity = 0;
+                        entry.lastOpacity = 0;
+                    }
+                    continue;
+                }
+
                 entry.el.style.transform = `translateY(calc(-50% + ${offset}px))`;
 
                 const isMajor = (tickIndex % RULER_MAJOR_EVERY === 0);
-                entry.el.classList.toggle('major', isMajor);
-                entry.labelEl.textContent = isMajor ? `${tickDepth}m` : '';
+                if (entry.lastMajor !== isMajor) {
+                    entry.el.classList.toggle('major', isMajor);
+                    entry.lastMajor = isMajor;
+                }
+                const labelText = isMajor ? `${tickDepth}m` : '';
+                if (entry.lastLabel !== labelText) {
+                    entry.labelEl.textContent = labelText;
+                    entry.lastLabel = labelText;
+                }
 
-                const dist = Math.abs(offset);
-                const fadeStart = windowHalf - 10;
-                entry.el.style.opacity = dist > fadeStart ? Math.max(0, 1 - (dist - fadeStart) / 20) : 1;
+                const opacity = dist > fadeStart ? Math.max(0, 1 - (dist - fadeStart) / 20) : 1;
+                if (entry.lastOpacity !== opacity) {
+                    entry.el.style.opacity = opacity;
+                    entry.lastOpacity = opacity;
+                }
             }
         }
         updateRuler(0);
@@ -2476,6 +2574,13 @@
         const snowLayerBack = document.getElementById('snow-back');
         const snowLayerMid = document.getElementById('snow-mid');
         const snowLayerFront = document.getElementById('snow-front');
+        const snowFillBack = document.getElementById('snow-back-fill');
+        const snowFillMid = document.getElementById('snow-mid-fill');
+        const snowFillFront = document.getElementById('snow-front-fill');
+        // Ramène une valeur dans [0, tileSize) — la neige défile visuellement à l'identique
+        // (le motif est répétitif) mais la valeur de transform reste bornée, ce qui garantit
+        // que le calque surdimensionné (voir CSS) couvre toujours tout l'écran.
+        const wrapTile = (v, t) => ((v % t) + t) % t;
 
         // ============================================================
         // BOUCLE PRINCIPALE UNIQUE — remplace l'ancien duo
@@ -2490,6 +2595,24 @@
         let lastZoneLabel = '';
         let lastSubmerged = false;
         let snowFrameParity = 0; // ~30fps pour la neige au lieu de 60fps (mouvement lent, imperceptible)
+
+        // OPTIM CPU (point 7) : coupe tout (boucle principale + vidéos en lecture) dès
+        // que l'onglet n'est plus affiché — sinon le décodage vidéo et les recalculs de
+        // style continuaient en arrière-plan, invisibles, pour rien. Tout reprend
+        // exactement là où c'était resté dès le retour sur l'onglet.
+        let rafRunning = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                rafRunning = false; // mainLoop() ne se replanifie plus (voir sa fin)
+                pauseBackgroundVideos(); // même fonction que pour les popups (point 5)
+            } else {
+                if (!rafRunning) {
+                    rafRunning = true;
+                    requestAnimationFrame(mainLoop);
+                }
+                if (!isMediaOpen) resumeBackgroundVideos(); // ne relance pas si une popup était ouverte entretemps
+            }
+        });
 
         function mainLoop() {
             // --- 1. Sous-marin (uniquement si la souris a bougé depuis la dernière frame) ---
@@ -2556,9 +2679,10 @@
                     // Signe inversé : le sous-marin descend plus vite que la neige ne coule,
                     // donc relativement à la caméra, la neige semble REMONTER quand on descend
                     // (et inversement quand on remonte) — comme sur neal.fun/deep-sea.
-                    snowLayerBack.style.backgroundPosition  = `0px ${(-sY * 0.05 + snowTimeOffset * 0.15).toFixed(1)}px`;
-                    snowLayerMid.style.backgroundPosition   = `0px ${(-sY * 0.12 + snowTimeOffset * 0.30).toFixed(1)}px`;
-                    snowLayerFront.style.backgroundPosition = `0px ${(-sY * 0.22 + snowTimeOffset * 0.55).toFixed(1)}px`;
+                    // OPTIM CPU : transform au lieu de backgroundPosition — voir commentaire CSS.
+                    snowFillBack.style.transform  = `translate3d(0, ${wrapTile(-sY * 0.05 + snowTimeOffset * 0.15, 320).toFixed(1)}px, 0)`;
+                    snowFillMid.style.transform   = `translate3d(0, ${wrapTile(-sY * 0.12 + snowTimeOffset * 0.30, 360).toFixed(1)}px, 0)`;
+                    snowFillFront.style.transform = `translate3d(0, ${wrapTile(-sY * 0.22 + snowTimeOffset * 0.55, 400).toFixed(1)}px, 0)`;
                     snowCurrentlyVisible = true;
                 } else if (snowCurrentlyVisible) {
                     snowLayerBack.style.opacity = 0;
@@ -2568,7 +2692,7 @@
                 }
             }
 
-            requestAnimationFrame(mainLoop);
+            if (rafRunning) requestAnimationFrame(mainLoop);
         }
         requestAnimationFrame(mainLoop);
 
@@ -2759,6 +2883,25 @@
         const popupBox = document.getElementById('popup-box');
         const closeBtn = document.getElementById('close-btn');
 
+        // OPTIM CPU (point 5) : les vidéos d'arrière-plan continuaient de jouer/décoder
+        // pendant qu'une popup mediaClick était ouverte — invisibles derrière le fond
+        // flouté, mais toujours actives. On les met en pause à l'ouverture, et on ne
+        // relance que celles qui étaient effectivement censées jouer (drapeau
+        // shouldPlay, posé par playObserver), en cas de scroll pendant que la popup
+        // était affichée.
+        function pauseBackgroundVideos() {
+            document.querySelectorAll('.depth-lazy-img').forEach((el) => {
+                if (el.tagName === 'VIDEO' && !el.paused) el.pause();
+            });
+        }
+        function resumeBackgroundVideos() {
+            document.querySelectorAll('.depth-lazy-img').forEach((el) => {
+                if (el.tagName === 'VIDEO' && el.dataset.shouldPlay === 'true' && el.readyState >= 2) {
+                    el.play().catch(() => {});
+                }
+            });
+        }
+
         function openPopup(mediaPath) {
             const oldMedia = popupBox.querySelector('.inserted-media');
             if (oldMedia) oldMedia.remove();
@@ -2783,11 +2926,13 @@
             popupBox.insertBefore(mediaElement, closeBtn);
             popup.classList.add('active');
             isMediaOpen = true;
+            pauseBackgroundVideos();
         }
 
         function closePopup() {
             popup.classList.remove('active');
             isMediaOpen = false;
+            resumeBackgroundVideos();
             setTimeout(() => {
                 const media = popupBox.querySelector('.inserted-media');
                 if (media) media.remove();
