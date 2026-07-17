@@ -110,13 +110,37 @@
             width: 130px;
             height: 130px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,214,150,0.55) 38%, transparent 72%);
+            background: radial-gradient(circle, #fffdf6 0%, #ffe9c2 42%, rgba(255,201,130,0.45) 70%, transparent 100%);
+            animation: sunPulse 5s ease-in-out infinite;
+            z-index: 3;
+        }
+        /* Halo externe, doux et diffus */
+        .sun-glow::before {
+            content: '';
+            position: absolute;
+            top: -35%;
+            left: -35%;
+            width: 170%;
+            height: 170%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 68%);
             filter: blur(2px);
-            animation: sunPulse 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        /* Cœur lumineux, net et éclatant */
+        .sun-glow::after {
+            content: '';
+            position: absolute;
+            top: 22%;
+            left: 22%;
+            width: 56%;
+            height: 56%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 0%, #fff3da 60%, transparent 100%);
         }
         @keyframes sunPulse {
             0%, 100% { opacity: 0.92; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.07); }
+            50% { opacity: 1; transform: scale(1.06); }
         }
 
         .cloud {
@@ -139,7 +163,7 @@
             position: absolute;
             left: 0;
             width: 100%;
-            bottom: 130px;
+            bottom: 150px;
             height: 90px;
             background: linear-gradient(180deg, transparent, rgba(255,159,104,0.32) 45%, rgba(26,111,131,0.5) 100%);
             filter: blur(7px);
@@ -188,27 +212,88 @@
             left: 0;
             bottom: 0;
             width: 100%;
-            height: 130px;
+            height: 150px;
             overflow: hidden;
             z-index: 4;
-            background: var(--color-sea-top);
+            /* CORRECTIF : PAS de couleur de fond ici (contrairement à une version
+               précédente). Un fond de la même couleur que la vague la rendait
+               invisible — bleu sur bleu identique, plus aucun contraste, seul le bord
+               statique du conteneur se voyait, d'où l'impression de vague plate/figée.
+               En laissant ce conteneur transparent, c'est la vague elle-même (voir plus
+               bas) qui est la SEULE source de bleu : au-dessus de sa crête, le ciel
+               continue de se voir normalement : c'est ce contraste qui rend le
+               mouvement de la crête réellement visible. */
         }
-        /* Vagues animées de la zone de surface (surface-ocean) — remontées pour couvrir
-           toute la hauteur de la section et supprimer la bande plate "morte" au-dessus */
+        /* Vague animée — courbe sinusoïdale pure : sa période divise exactement la
+           largeur du viewBox, donc translateX(-50%) reboucle sur un état visuellement
+           identique au point de départ, à l'infini, sans coupure ni saut. */
         .wave {
             position: absolute;
             left: 0;
+            /* Léger débord vers le bas : garantit que le bas de la vague dépasse
+               toujours le bord réel du conteneur, même pendant la phase où elle
+               remonte (-10px de bob vertical, voir @keyframes plus bas) — sans ça, un
+               petit espace transparent aurait pu apparaître tout en bas. */
+            bottom: -10px;
             width: 200%;
-            height: 90px;
-            animation: waveScroll linear infinite;
+            height: 150px;
+            animation: waveScroll 16s linear infinite;
         }
+        /* CORRECTIF : un simple glissement horizontal d'un motif périodique peut, à
+           l'œil, donner une impression de quasi-immobilité (le motif se répète, donc
+           le regard n'accroche pas bien le mouvement latéral seul). On ajoute un
+           mouvement vertical de gonflement/affaissement — le vrai geste d'une vague qui
+           monte et descend — en plus du glissement horizontal. Les deux mouvements
+           sont combinés dans les mêmes images-clés : à 0% et 100%, translateY revient
+           à 0 pendant que translateX atteint -50% (le point de boucle sans coupure
+           déjà établi), donc la boucle reste parfaitement continue. */
         @keyframes waveScroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0%   { transform: translateX(0)      translateY(0px); }
+            25%  { transform: translateX(-12.5%) translateY(-10px); }
+            50%  { transform: translateX(-25%)   translateY(0px); }
+            75%  { transform: translateX(-37.5%) translateY(10px); }
+            100% { transform: translateX(-50%)   translateY(0px); }
         }
-        .surface-ocean .wave-back  { top: 0px; opacity: 0.6;  animation-duration: 24s; }
-        .surface-ocean .wave-mid   { top: 4px; opacity: 0.85; animation-duration: 17s; }
-        .surface-ocean .wave-front { top: 8px; opacity: 1;    animation-duration: 12s; }
+
+
+        .flying-card .animal-visual {
+            /* PRÉCAUTION : contrairement aux cartes classiques (déplacées par le scroll
+               de la page, que content-visibility gère bien), celle-ci se déplace en
+               continu via transform CSS — un cas moins standard pour l'évaluation de
+               "pertinence" de content-visibility, qui pourrait dans certains
+               navigateurs ne jamais déclencher le rendu normal. Seulement 2 éléments
+               de ce type (contre 91 cartes classiques) : le gain CPU y est de toute
+               façon négligeable, on désactive ici par sécurité. */
+            content-visibility: visible;
+        }
+
+        /* ============================================================
+           ANIMAL VOLANT (albatros / poisson volant, en alternance)
+           ------------------------------------------------------------
+           Traverse l'écran de gauche à droite, sort de l'écran, reste
+           invisible un moment, puis c'est au tour de l'autre animal de
+           traverser. La taille et les durées (traversée / pause) sont
+           définies en JS via des constantes clairement indiquées — voir
+           FLYING_ANIMAL_SIZE_PX, FLYING_CROSS_SECONDS, FLYING_GAP_SECONDS
+           un peu plus bas dans le fichier — et injectées ici sous forme
+           de CSS généré. Une fois injectée, l'animation reste du pur CSS
+           (aucun coût JS en continu, juste un calcul unique au chargement).
+           ============================================================ */
+        .flying-card {
+            left: 0;
+            z-index: 5; /* au-dessus des vagues, sous le titre (grâce à la position, pas au z-index) */
+            cursor: pointer;
+        }
+        .flying-card .flying-visual {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+        }
+        /* Les deux animaux ne sont jamais visibles en même temps (voir alternance
+           générée en JS), donc ils partagent la même position verticale — plus robuste
+           sur les écrans bas que deux hauteurs différentes. */
+        .flying-card-albatros, .flying-card-poisson { top: 38%; }
 
         /* --- DEGRADE DE LUMIERE --- */
         /* Dégradé de profondeur découpé en plusieurs segments (au lieu d'un bloc unique de
@@ -873,15 +958,12 @@
             <p class="surface-subtitle">Faites défiler (molette / trackpad) pour commencer la descente...</p>
         </div>
 
+        <!-- Animal volant (albatros / poisson volant en alternance) — rempli par JS -->
+        <div id="flying-animals-container"></div>
+
         <div class="surface-ocean">
-            <svg class="wave wave-back" viewBox="0 0 1200 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,18 C150,30 350,8 600,18 C850,30 1050,10 1200,18 L1200,200 L0,200 Z" fill="#4db8e8"/>
-            </svg>
-            <svg class="wave wave-mid" viewBox="0 0 1200 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,14 C200,5 400,26 650,13 C900,4 1050,22 1200,11 L1200,200 L0,200 Z" fill="#1a9bd8"/>
-            </svg>
-            <svg class="wave wave-front" viewBox="0 0 1200 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,20 C180,10 380,28 620,17 C860,8 1040,25 1200,18 L1200,200 L0,200 Z" fill="#0284c7"/>
+            <svg class="wave" viewBox="0 0 1200 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.0,70.0 L15.0,75.0 L30.0,79.9 L45.0,84.5 L60.0,88.8 L75.0,92.6 L90.0,95.9 L105.0,98.5 L120.0,100.4 L135.0,101.6 L150.0,102.0 L165.0,101.6 L180.0,100.4 L195.0,98.5 L210.0,95.9 L225.0,92.6 L240.0,88.8 L255.0,84.5 L270.0,79.9 L285.0,75.0 L300.0,70.0 L315.0,65.0 L330.0,60.1 L345.0,55.5 L360.0,51.2 L375.0,47.4 L390.0,44.1 L405.0,41.5 L420.0,39.6 L435.0,38.4 L450.0,38.0 L465.0,38.4 L480.0,39.6 L495.0,41.5 L510.0,44.1 L525.0,47.4 L540.0,51.2 L555.0,55.5 L570.0,60.1 L585.0,65.0 L600.0,70.0 L615.0,75.0 L630.0,79.9 L645.0,84.5 L660.0,88.8 L675.0,92.6 L690.0,95.9 L705.0,98.5 L720.0,100.4 L735.0,101.6 L750.0,102.0 L765.0,101.6 L780.0,100.4 L795.0,98.5 L810.0,95.9 L825.0,92.6 L840.0,88.8 L855.0,84.5 L870.0,79.9 L885.0,75.0 L900.0,70.0 L915.0,65.0 L930.0,60.1 L945.0,55.5 L960.0,51.2 L975.0,47.4 L990.0,44.1 L1005.0,41.5 L1020.0,39.6 L1035.0,38.4 L1050.0,38.0 L1065.0,38.4 L1080.0,39.6 L1095.0,41.5 L1110.0,44.1 L1125.0,47.4 L1140.0,51.2 L1155.0,55.5 L1170.0,60.1 L1185.0,65.0 L1200.0,70.0 L1200,150 L0,150 Z" style="fill: var(--color-sea-top);"/>
             </svg>
         </div>
     </section>
@@ -2266,7 +2348,7 @@
 
             card.innerHTML = `
                 <div class="animal-tooltip">${animal.anecdote}</div>
-                <div class="animal-visual" style="width:${animal.tailleRelative}; padding:${visualPadding}${tailleUnit}; margin:-${visualPadding}${tailleUnit};">${mediaTag}</div>
+                <div class="animal-visual" style="width:${animal.tailleRelative}; height:${animal.tailleRelative}; padding:${visualPadding}${tailleUnit}; margin:-${visualPadding}${tailleUnit};">${mediaTag}</div>
                 <div class="animal-name">${animal.nom}</div>
                 <div class="animal-latin">${animal.nomLatin}</div>
                 <div class="animal-size">Taille : ${animal.taille}</div>
@@ -2289,6 +2371,136 @@
             depthImageQueue.push(queueEntry);
             depthImageQueueByCard.set(card, queueEntry); // lookup O(1) pour les IntersectionObserver plus bas
         });
+
+        // ============================================================
+        // ANIMAL VOLANT (albatros / poisson volant, en alternance)
+        // ------------------------------------------------------------
+        // Ne fait pas partie du système de profondeur (pas de defilement
+        // vertical) : reutilise juste les memes briques visuelles que les
+        // autres animaux (tooltip d'anecdote, clic -> mediaClick), avec
+        // sa propre traversee horizontale geree entierement en CSS (les
+        // images-clés sont générées dynamiquement juste en dessous, à
+        // partir des 3 réglages ci-après). Les deux animaux ne sont
+        // jamais visibles en meme temps : l'alternance vient uniquement
+        // du minutage des keyframes, aucun minuteur JS necessaire.
+        // ============================================================
+
+        // ============================================================
+        // RÉGLAGES FACILES À MODIFIER — taille et vitesse des animaux volants
+        // ============================================================
+        const FLYING_ANIMAL_SIZE_PX = 250;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
+        const FLYING_CROSS_SECONDS = 5;     // temps pour traverser l'écran de gauche à droite (secondes) — diminuez pour aller plus vite
+        const FLYING_GAP_SECONDS = 2;       // temps d'invisibilité entre deux passages du MÊME animal (secondes)
+
+        const animauxVolants = [
+            {
+                nom: "Albatros",
+                nomLatin: "Diomedea exulans",
+                anecdote: "L'albatros peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
+                image: "images/icone/albatros.webm",
+                mediaClick: "images/albatros1.webp",
+                classe: "flying-card-albatros"
+            },
+            {
+                nom: "Poisson volant",
+                nomLatin: "Exocoetidae",
+                anecdote: "Grâce à ses nageoires pectorales démesurées, il peut planer au ras de l'eau sur plus de 50 mètres pour échapper à ses prédateurs.",
+                image: "images/icone/poissonvol.webm",
+                mediaClick: "images/poissonvol1.mp4",
+                classe: "flying-card-poisson"
+            }
+        ];
+
+        // Calcule les images-clés à partir des réglages ci-dessus, puis les injecte
+        // dans une balise <style> : une fois posée, l'animation reste du pur CSS
+        // (aucun coût JS en continu) — seul ce calcul initial dépend des réglages.
+        const flyTotalCycle = 2 * (FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS);
+        const flyPctCrossA = (FLYING_CROSS_SECONDS / flyTotalCycle * 100).toFixed(3);
+        const flyPctStartB = ((FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS) / flyTotalCycle * 100).toFixed(3);
+        const flyPctCrossB = ((2 * FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS) / flyTotalCycle * 100).toFixed(3);
+        const flyingStyleTag = document.createElement('style');
+        flyingStyleTag.textContent = `
+            @keyframes flyTurnA {
+                0% { transform: translateX(-20vw); }
+                ${flyPctCrossA}% { transform: translateX(120vw); }
+                100% { transform: translateX(120vw); }
+            }
+            @keyframes flyTurnB {
+                0% { transform: translateX(-20vw); }
+                ${flyPctStartB}% { transform: translateX(-20vw); }
+                ${flyPctCrossB}% { transform: translateX(120vw); }
+                100% { transform: translateX(120vw); }
+            }
+            .flying-card-albatros { animation: flyTurnA ${flyTotalCycle}s linear infinite; }
+            .flying-card-poisson  { animation: flyTurnB ${flyTotalCycle}s linear infinite; }
+        `;
+        document.head.appendChild(flyingStyleTag);
+
+        const flyingContainer = document.getElementById('flying-animals-container');
+        const flyingVideos = [];
+
+        animauxVolants.forEach((animal) => {
+            const card = document.createElement('div');
+            // Réutilise .animal-card pour hériter gratuitement du centrage flex et du
+            // comportement de survol du tooltip (.animal-card:hover .animal-tooltip).
+            card.className = `animal-card flying-card ${animal.classe}`;
+
+            card.innerHTML = `
+                <div class="animal-tooltip">${animal.anecdote}</div>
+                <div class="animal-visual" style="width:${FLYING_ANIMAL_SIZE_PX}px; height:${FLYING_ANIMAL_SIZE_PX}px; padding:${Math.round(FLYING_ANIMAL_SIZE_PX*0.2)}px; margin:-${Math.round(FLYING_ANIMAL_SIZE_PX*0.2)}px;">
+                    <video src="${animal.image}" class="flying-visual" muted loop autoplay playsinline webkit-playsinline></video>
+                </div>
+            `;
+
+            if (animal.mediaClick && animal.mediaClick.trim() !== "") {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPopup(animal.mediaClick);
+                });
+            }
+
+            flyingContainer.appendChild(card);
+            const video = card.querySelector('.flying-visual');
+            if (video) {
+                flyingVideos.push(video);
+                // CORRECTIF : sans ceci, la vidéo restait invisible pour toujours
+                // (opacity:0 par défaut — voir la règle .animal-card video plus haut,
+                // qui ne passe à opacity:1 qu'une fois la classe .loaded ajoutée). Les
+                // animaux classiques la reçoivent via le système de chargement
+                // progressif ; celui-ci étant plus simple (pas de lazy-load), on
+                // l'ajoute directement dès que la vidéo a une première image prête.
+                video.addEventListener('loadeddata', () => {
+                    video.classList.add('loaded');
+                }, { once: true });
+                // DIAGNOSTIC (permanent, coût nul en fonctionnement normal) : si le
+                // fichier vidéo ne charge pas, affiche directement sur la page le
+                // chemin exact recherché, plutôt qu'un échec invisible qu'on ne peut
+                // repérer que dans la console du navigateur.
+                video.addEventListener('error', () => {
+                    const errLabel = document.createElement('div');
+                    errLabel.textContent = `⚠️ Vidéo introuvable : ${animal.image}`;
+                    errLabel.style.cssText = 'position:absolute; top:-28px; left:50%; transform:translateX(-50%); background:#b91c1c; color:#fff; font-size:11px; padding:4px 8px; white-space:nowrap; border-radius:4px; z-index:100; font-family:sans-serif;';
+                    card.appendChild(errLabel);
+                    console.error(`[animal volant] échec de chargement : ${animal.image}`);
+                }, { once: true });
+            }
+        });
+
+        // OPTIM CPU : une fois la section de surface quittée (l'utilisateur a commencé
+        // sa descente et n'y reviendra presque jamais), plus besoin de faire tourner le
+        // décodage de ces deux petites vidéos en boucle indéfiniment.
+        const surfaceSectionEl = document.querySelector('.surface');
+        if (surfaceSectionEl && flyingVideos.length) {
+            const surfaceVisibilityObserver = new IntersectionObserver((entries) => {
+                entries.forEach((obs) => {
+                    flyingVideos.forEach((v) => {
+                        if (obs.isIntersecting) v.play().catch(() => {});
+                        else v.pause();
+                    });
+                });
+            }, { threshold: 0 });
+            surfaceVisibilityObserver.observe(surfaceSectionEl);
+        }
 
         // ============================================================
         // GESTION DES MÉDIAS À GRANDE ÉCHELLE (jusqu'à ~100 animaux)
@@ -2648,7 +2860,16 @@
             }
 
             const lineOffset = window.innerHeight / 2;
-            const WATER_VISUAL_START = surfaceHeight - 130;
+            // CORRECTIF : alignée sur la nouvelle hauteur de la zone de vagues (190px,
+            // contre 130px avant l'agrandissement des vagues) pour que le repère "0m"
+            // de la règle de profondeur reste calé sur le début visuel réel de l'eau.
+            // CORRECTIF : alignée sur la nouvelle hauteur de la zone de vagues (340px,
+            // agrandie pour corriger l'effet "plat") pour que le repère "0m" de la règle
+            // de profondeur reste calé sur le début visuel réel de l'eau.
+            // CORRECTIF : alignée sur la hauteur actuelle de la zone de vague (150px)
+            // pour que le repère "0m" de la règle de profondeur reste calé sur le début
+            // visuel réel de l'eau.
+            const WATER_VISUAL_START = surfaceHeight - 150;
 
             let currentDepth = 0;
             if (scrollTop + lineOffset > WATER_VISUAL_START) {
