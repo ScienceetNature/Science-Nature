@@ -268,7 +268,7 @@
         }
 
         /* ============================================================
-           ANIMAL VOLANT (albatros / poisson volant, en alternance)
+           ANIMAL VOLANT (albatros)
            ------------------------------------------------------------
            Traverse l'écran de gauche à droite, sort de l'écran, reste
            invisible un moment, puis c'est au tour de l'autre animal de
@@ -293,7 +293,7 @@
         /* Les deux animaux ne sont jamais visibles en même temps (voir alternance
            générée en JS), donc ils partagent la même position verticale — plus robuste
            sur les écrans bas que deux hauteurs différentes. */
-        .flying-card-albatros, .flying-card-poisson { top: 38%; }
+        .flying-card-albatros { top: 38%; }
 
         /* --- DEGRADE DE LUMIERE --- */
         /* Dégradé de profondeur découpé en plusieurs segments (au lieu d'un bloc unique de
@@ -958,7 +958,7 @@
             <p class="surface-subtitle">Faites défiler (molette / trackpad) pour commencer la descente...</p>
         </div>
 
-        <!-- Animal volant (albatros / poisson volant en alternance) — rempli par JS -->
+        <!-- Animal volant (albatros) — rempli par JS -->
         <div id="flying-animals-container"></div>
 
         <div class="surface-ocean">
@@ -2373,7 +2373,7 @@
         });
 
         // ============================================================
-        // ANIMAL VOLANT (albatros / poisson volant, en alternance)
+        // ANIMAL VOLANT (albatros)
         // ------------------------------------------------------------
         // Ne fait pas partie du système de profondeur (pas de defilement
         // vertical) : reutilise juste les memes briques visuelles que les
@@ -2388,36 +2388,28 @@
         // ============================================================
         // RÉGLAGES FACILES À MODIFIER — taille et vitesse des animaux volants
         // ============================================================
-        const FLYING_ANIMAL_SIZE_PX = 250;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
-        const FLYING_CROSS_SECONDS = 5;     // temps pour traverser l'écran de gauche à droite (secondes) — diminuez pour aller plus vite
-        const FLYING_GAP_SECONDS = 2;       // temps d'invisibilité entre deux passages du MÊME animal (secondes)
+        const FLYING_ANIMAL_SIZE_PX = 300;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
+        const FLYING_CROSS_SECONDS = 4;     // temps pour traverser l'écran de gauche à droite (secondes) — diminuez pour aller plus vite
+        const FLYING_GAP_SECONDS = 3;       // temps d'invisibilité entre deux passages du MÊME animal (secondes)
 
         const animauxVolants = [
             {
                 nom: "Albatros",
                 nomLatin: "Diomedea exulans",
-                anecdote: "L'albatros peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
+                anecdote: "L'albatros, plus grand oiseau du monde, peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
                 image: "images/icone/albatros.webm",
                 mediaClick: "images/albatros1.webp",
-                classe: "flying-card-albatros"
-            },
-            {
-                nom: "Poisson volant",
-                nomLatin: "Exocoetidae",
-                anecdote: "Grâce à ses nageoires pectorales démesurées, il peut planer au ras de l'eau sur plus de 50 mètres pour échapper à ses prédateurs.",
-                image: "images/icone/poissonvol.webm",
-                mediaClick: "images/poissonvol1.mp4",
-                classe: "flying-card-poisson"
+                classe: "flying-card-albatros",
+                startDelay: 0 // sa traversée commence dès le début du cycle
             }
         ];
 
         // Calcule les images-clés à partir des réglages ci-dessus, puis les injecte
         // dans une balise <style> : une fois posée, l'animation reste du pur CSS
         // (aucun coût JS en continu) — seul ce calcul initial dépend des réglages.
-        const flyTotalCycle = 2 * (FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS);
+        // Cycle simple à un seul animal : traversée, puis pause, puis ça recommence.
+        const flyTotalCycle = FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS;
         const flyPctCrossA = (FLYING_CROSS_SECONDS / flyTotalCycle * 100).toFixed(3);
-        const flyPctStartB = ((FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS) / flyTotalCycle * 100).toFixed(3);
-        const flyPctCrossB = ((2 * FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS) / flyTotalCycle * 100).toFixed(3);
         const flyingStyleTag = document.createElement('style');
         flyingStyleTag.textContent = `
             @keyframes flyTurnA {
@@ -2425,14 +2417,7 @@
                 ${flyPctCrossA}% { transform: translateX(120vw); }
                 100% { transform: translateX(120vw); }
             }
-            @keyframes flyTurnB {
-                0% { transform: translateX(-20vw); }
-                ${flyPctStartB}% { transform: translateX(-20vw); }
-                ${flyPctCrossB}% { transform: translateX(120vw); }
-                100% { transform: translateX(120vw); }
-            }
             .flying-card-albatros { animation: flyTurnA ${flyTotalCycle}s linear infinite; }
-            .flying-card-poisson  { animation: flyTurnB ${flyTotalCycle}s linear infinite; }
         `;
         document.head.appendChild(flyingStyleTag);
 
@@ -2472,6 +2457,26 @@
                 video.addEventListener('loadeddata', () => {
                     video.classList.add('loaded');
                 }, { once: true });
+
+                // SYNCHRO VIDÉO/TRAJET : la vidéo tourne en boucle en continu depuis le
+                // chargement de la page, indépendamment du cycle d'apparition — sans
+                // synchronisation, l'animal pourrait très bien arriver à l'écran alors
+                // que sa vidéo est déjà à 1s, 3s, etc., créant un saut visible en plein
+                // milieu de la traversée. On force donc un redémarrage exact (retour à
+                // l'image 0) au moment précis où chaque traversée commence, puis à
+                // chaque cycle complet — un simple minuteur, sans coût notable puisqu'il
+                // ne se déclenche qu'une poignée de fois par minute.
+                const cycleMs = flyTotalCycle * 1000;
+                const startDelayMs = animal.startDelay * 1000;
+                function scheduleNextRestart(delay) {
+                    setTimeout(() => {
+                        video.currentTime = 0;
+                        video.play().catch(() => {});
+                        scheduleNextRestart(cycleMs);
+                    }, delay);
+                }
+                scheduleNextRestart(startDelayMs);
+
                 // DIAGNOSTIC (permanent, coût nul en fonctionnement normal) : si le
                 // fichier vidéo ne charge pas, affiche directement sur la page le
                 // chemin exact recherché, plutôt qu'un échec invisible qu'on ne peut
