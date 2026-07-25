@@ -2388,7 +2388,7 @@
         // ============================================================
         // RÉGLAGES FACILES À MODIFIER — taille et vitesse des animaux volants
         // ============================================================
-        const FLYING_ANIMAL_SIZE_PX = 300;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
+        const FLYING_ANIMAL_SIZE_PX = 290;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
         const FLYING_CROSS_SECONDS = 4;     // temps pour traverser l'écran de gauche à droite (secondes) — diminuez pour aller plus vite
         const FLYING_GAP_SECONDS = 3;       // temps d'invisibilité entre deux passages du MÊME animal (secondes)
 
@@ -2396,7 +2396,7 @@
             {
                 nom: "Albatros",
                 nomLatin: "Diomedea exulans",
-                anecdote: "L'albatros, plus grand oiseau du monde, peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
+                anecdote: "Plus grand oiseau du monde, l'albatros peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
                 image: "images/icone/albatros.webm",
                 mediaClick: "images/albatros1.webp",
                 classe: "flying-card-albatros",
@@ -2458,24 +2458,71 @@
                     video.classList.add('loaded');
                 }, { once: true });
 
-                // SYNCHRO VIDÉO/TRAJET : la vidéo tourne en boucle en continu depuis le
-                // chargement de la page, indépendamment du cycle d'apparition — sans
-                // synchronisation, l'animal pourrait très bien arriver à l'écran alors
-                // que sa vidéo est déjà à 1s, 3s, etc., créant un saut visible en plein
-                // milieu de la traversée. On force donc un redémarrage exact (retour à
-                // l'image 0) au moment précis où chaque traversée commence, puis à
-                // chaque cycle complet — un simple minuteur, sans coût notable puisqu'il
-                // ne se déclenche qu'une poignée de fois par minute.
-                const cycleMs = flyTotalCycle * 1000;
-                const startDelayMs = animal.startDelay * 1000;
-                function scheduleNextRestart(delay) {
-                    setTimeout(() => {
-                        video.currentTime = 0;
-                        video.play().catch(() => {});
-                        scheduleNextRestart(cycleMs);
+                // SYNCHRO VIDÉO/TRAJET : la vidéo tournait auparavant en boucle en
+                // continu, y compris pendant que l'animal est hors champ (pause entre
+                // deux traversées) — inutile, personne ne la voit à ce moment-là. Ce
+                // minuteur fait donc deux choses en alternance : (1) remet la vidéo à
+                // l'image 0 et la relance pile au moment où la traversée commence (pour
+                // que le mouvement colle au trajet, sans saut), et (2) la met en pause
+                // dès que l'animal sort de l'écran, jusqu'à la traversée suivante. Un
+                // simple minuteur, sans coût notable puisqu'il ne se déclenche que
+                // quelques fois par minute.
+                // "inCrossingPhase" indique si l'animal est censé être visible/en vol
+                // en ce moment — utilisé par l'observateur de section plus bas pour ne
+                // jamais relancer la vidéo à un mauvais moment (ex. si on revient sur la
+                // section pendant que l'animal est censé être en pause hors champ).
+                video.dataset.inCrossingPhase = 'true';
+                const crossMs = FLYING_CROSS_SECONDS * 1000;
+                const gapMs = FLYING_GAP_SECONDS * 1000;
+                let restartTimer = null;
+                let restartTargetTime = null; // horodatage (performance.now()) du prochain évènement prévu
+                let restartPausedAt = null;
+                let nextPhase = 'cross'; // alterne : 'cross' (relance) puis 'gap' (pause)
+                function scheduleNext(delay) {
+                    restartTargetTime = performance.now() + delay;
+                    restartTimer = setTimeout(() => {
+                        if (nextPhase === 'cross') {
+                            video.currentTime = 0;
+                            video.dataset.inCrossingPhase = 'true';
+                            video.play().catch(() => {});
+                            nextPhase = 'gap';
+                            scheduleNext(crossMs);
+                        } else {
+                            video.dataset.inCrossingPhase = 'false';
+                            video.pause(); // hors champ : plus la peine de décoder pour rien
+                            nextPhase = 'cross';
+                            scheduleNext(gapMs);
+                        }
                     }, delay);
                 }
-                scheduleNextRestart(startDelayMs);
+                scheduleNext(animal.startDelay * 1000);
+
+                // SURVOL : fige complètement l'animal (trajet + vidéo) le temps de lire
+                // l'anecdote — sinon le passage est trop rapide pour avoir le temps de
+                // la lire. Tout reprend exactement là où c'était resté à la sortie du
+                // survol, minuteur de synchronisation inclus. (Le survol ne peut de
+                // toute façon se produire que pendant la phase visible, l'animal étant
+                // hors écran — donc hors de portée de la souris — pendant sa pause.)
+                card.addEventListener('mouseenter', () => {
+                    card.style.animationPlayState = 'paused';
+                    video.style.animationPlayState = 'paused'; // le léger balancement de la vidéo elle-même
+                    video.pause();
+                    if (restartTimer) {
+                        clearTimeout(restartTimer);
+                        restartTimer = null;
+                        restartPausedAt = performance.now();
+                    }
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.animationPlayState = 'running';
+                    video.style.animationPlayState = 'running';
+                    video.play().catch(() => {});
+                    if (restartPausedAt !== null && restartTargetTime !== null) {
+                        const remaining = Math.max(0, restartTargetTime - restartPausedAt);
+                        scheduleNext(remaining);
+                        restartPausedAt = null;
+                    }
+                });
 
                 // DIAGNOSTIC (permanent, coût nul en fonctionnement normal) : si le
                 // fichier vidéo ne charge pas, affiche directement sur la page le
@@ -2493,14 +2540,20 @@
 
         // OPTIM CPU : une fois la section de surface quittée (l'utilisateur a commencé
         // sa descente et n'y reviendra presque jamais), plus besoin de faire tourner le
-        // décodage de ces deux petites vidéos en boucle indéfiniment.
+        // décodage de cette petite vidéo en boucle indéfiniment.
         const surfaceSectionEl = document.querySelector('.surface');
         if (surfaceSectionEl && flyingVideos.length) {
             const surfaceVisibilityObserver = new IntersectionObserver((entries) => {
                 entries.forEach((obs) => {
                     flyingVideos.forEach((v) => {
-                        if (obs.isIntersecting) v.play().catch(() => {});
-                        else v.pause();
+                        if (obs.isIntersecting) {
+                            // Ne relance que si l'animal est censé être en vol à cet
+                            // instant — sinon on le relancerait par erreur pendant sa
+                            // pause hors champ (voir minuteur plus haut).
+                            if (v.dataset.inCrossingPhase !== 'false') v.play().catch(() => {});
+                        } else {
+                            v.pause();
+                        }
                     });
                 });
             }, { threshold: 0 });
