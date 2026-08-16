@@ -1,0 +1,3248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plongée dans les Abysses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- STYLES GENERAUX --- */
+        :root {
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Montserrat', sans-serif;
+            --font-signature: 'Great Vibes', cursive;
+            --color-sea-top: #0284c7;
+
+            /* Palette "golden hour" de la scène de surface (zone orange) */
+            --sky-1: #fff6e6;
+            --sky-2: #ffdb9e;
+            --sky-3: #ff9f68;
+            --sky-4: #f9704f;
+        }
+
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            /* La "barre grise" tout à droite de l'écran est la barre de défilement
+               native du navigateur (confirmé par analyse des pixels : gris uniforme,
+               pleine hauteur, à l'emplacement exact d'une scrollbar). Comme la page a
+               déjà sa propre règle de profondeur comme repère visuel de position, on la
+               masque pour un rendu plus soigné — le défilement (molette, trackpad,
+               tactile, clavier) continue de fonctionner normalement, seule la barre
+               visuelle disparaît. */
+            scrollbar-width: none; /* Firefox */
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* On cache le curseur par défaut pour le remplacer par le combo sous-marin + viseur */
+            cursor: none !important;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: #ffffff;
+            /* CORRECTIF BUG (scroll bloqué sur Firefox desktop) : cette règle avait
+               autrefois "overflow-x: hidden;" en plus de celle déjà posée sur <html>
+               juste au-dessus. Avec les deux à la fois, le navigateur considère <html>
+               ET <body> comme deux conteneurs défilants indépendants (chacun avec une
+               hauteur de contenu supérieure à sa propre hauteur visible) — <html> suffit
+               largement à lui seul pour rogner tout débordement horizontal de la page
+               entière, y compris celui de <body>. Reproduit et confirmé : avec les deux
+               réglages simultanés, le défilement à la molette ne fonctionne plus dans au
+               moins un moteur de rendu ; avec un seul des deux (sur <html>), tout
+               fonctionne normalement, dans tous les navigateurs testés. */
+            /* Fond de repli en noir : lors d'un scroll très rapide, le navigateur peut
+               mettre un instant à peindre le grand dégradé .ocean-light-glow dans les
+               zones qui viennent d'apparaître, et c'est ce fond qui se voit brièvement.
+               Le noir reste le choix le plus sûr car il correspond à la couleur réelle
+               de la majorité de la page (le noir commence dès 4000m, soit ~58% de la
+               hauteur totale) — un bref flash y est donc invisible. Un essai en bleu de
+               surface a été fait puis écarté : il rendait le flash bien plus visible et
+               plus fréquent dans les abysses, qui occupent la majorité du parcours. */
+            background-color: #000000;
+            height: 50000px; /* Ajusté dynamiquement par le JS */
+        }
+
+        /* ============================================================
+           1. ZONE DE SURFACE (« ZONE ORANGE ») — CIEL, ÎLE, SOUS-MARIN
+           ============================================================ */
+        .surface {
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+            color: #0f172a;
+            /* OPTIM CPU : une fois qu'on a scrollé plus bas, cette section (ciel dégradé,
+               nuages flous animés, vagues SVG) sort de l'écran mais continuait à être
+               peinte à chaque frame. content-visibility:auto dit au navigateur de sauter
+               entièrement le style/layout/paint de cette section tant qu'elle n'est pas
+               visible, sans changer son apparence quand on la revoit. */
+            content-visibility: auto;
+            contain-intrinsic-size: 100% 100vh;
+        }
+
+        .surface-sky {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                var(--sky-1) 0%,
+                var(--sky-2) 30%,
+                var(--sky-3) 54%,
+                var(--sky-4) 70%,
+                #2f6d7a 100%);
+            z-index: 1;
+        }
+
+        .sun-glow {
+            position: absolute;
+            top: 13%;
+            left: 64%;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fffdf6 0%, #ffe9c2 42%, rgba(255,201,130,0.45) 70%, transparent 100%);
+            animation: sunPulse 5s ease-in-out infinite;
+            z-index: 3;
+        }
+        /* Halo externe, doux et diffus */
+        .sun-glow::before {
+            content: '';
+            position: absolute;
+            top: -35%;
+            left: -35%;
+            width: 170%;
+            height: 170%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 68%);
+            filter: blur(2px);
+            z-index: -1;
+        }
+        /* Cœur lumineux, net et éclatant */
+        .sun-glow::after {
+            content: '';
+            position: absolute;
+            top: 22%;
+            left: 22%;
+            width: 56%;
+            height: 56%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 0%, #fff3da 60%, transparent 100%);
+        }
+        @keyframes sunPulse {
+            0%, 100% { opacity: 0.92; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.06); }
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50px;
+            filter: blur(2px);
+            animation: driftCloud linear infinite;
+            z-index: 2;
+        }
+        .cloud-1 { width: 170px; height: 34px; top: 9%;  left: -15%; animation-duration: 75s; }
+        .cloud-2 { width: 110px; height: 24px; top: 21%; left: 35%;  animation-duration: 95s; opacity: 0.45; }
+        .cloud-3 { width: 140px; height: 28px; top: 6%;  left: 65%;  animation-duration: 85s; opacity: 0.55; }
+        @keyframes driftCloud {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(140vw); }
+        }
+
+        .horizon-haze {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            bottom: 150px;
+            height: 90px;
+            background: linear-gradient(180deg, transparent, rgba(255,159,104,0.32) 45%, rgba(26,111,131,0.5) 100%);
+            filter: blur(7px);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* --- Texte du titre (point 2 : signature en calligraphie sous le titre) --- */
+        .surface-text {
+            position: absolute;
+            top: 13%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            z-index: 6;
+        }
+        .surface-text h1 {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 18px rgba(255,255,255,0.35);
+        }
+        .surface-signature {
+            font-family: var(--font-signature);
+            font-size: 1.9rem;
+            font-weight: 400;
+            margin-bottom: 22px;
+            opacity: 0.85;
+            letter-spacing: 1px;
+        }
+        .surface-subtitle {
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.75;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .surface-ocean {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            z-index: 4;
+            /* CORRECTIF : PAS de couleur de fond ici (contrairement à une version
+               précédente). Un fond de la même couleur que la vague la rendait
+               invisible — bleu sur bleu identique, plus aucun contraste, seul le bord
+               statique du conteneur se voyait, d'où l'impression de vague plate/figée.
+               En laissant ce conteneur transparent, c'est la vague elle-même (voir plus
+               bas) qui est la SEULE source de bleu : au-dessus de sa crête, le ciel
+               continue de se voir normalement : c'est ce contraste qui rend le
+               mouvement de la crête réellement visible. */
+        }
+        /* Vague animée — courbe sinusoïdale pure : sa période divise exactement la
+           largeur du viewBox, donc translateX(-50%) reboucle sur un état visuellement
+           identique au point de départ, à l'infini, sans coupure ni saut. */
+        .wave {
+            position: absolute;
+            left: 0;
+            /* Léger débord vers le bas : garantit que le bas de la vague dépasse
+               toujours le bord réel du conteneur, même pendant la phase où elle
+               remonte (-10px de bob vertical, voir @keyframes plus bas) — sans ça, un
+               petit espace transparent aurait pu apparaître tout en bas. */
+            bottom: -10px;
+            width: 200%;
+            height: 150px;
+            animation: waveScroll 16s linear infinite;
+        }
+        /* CORRECTIF : un simple glissement horizontal d'un motif périodique peut, à
+           l'œil, donner une impression de quasi-immobilité (le motif se répète, donc
+           le regard n'accroche pas bien le mouvement latéral seul). On ajoute un
+           mouvement vertical de gonflement/affaissement — le vrai geste d'une vague qui
+           monte et descend — en plus du glissement horizontal. Les deux mouvements
+           sont combinés dans les mêmes images-clés : à 0% et 100%, translateY revient
+           à 0 pendant que translateX atteint -50% (le point de boucle sans coupure
+           déjà établi), donc la boucle reste parfaitement continue. */
+        @keyframes waveScroll {
+            0%   { transform: translateX(0)      translateY(0px); }
+            25%  { transform: translateX(-12.5%) translateY(-10px); }
+            50%  { transform: translateX(-25%)   translateY(0px); }
+            75%  { transform: translateX(-37.5%) translateY(10px); }
+            100% { transform: translateX(-50%)   translateY(0px); }
+        }
+
+
+        .flying-card .animal-visual {
+            /* PRÉCAUTION : contrairement aux cartes classiques (déplacées par le scroll
+               de la page, que content-visibility gère bien), celle-ci se déplace en
+               continu via transform CSS — un cas moins standard pour l'évaluation de
+               "pertinence" de content-visibility, qui pourrait dans certains
+               navigateurs ne jamais déclencher le rendu normal. Seulement 2 éléments
+               de ce type (contre 91 cartes classiques) : le gain CPU y est de toute
+               façon négligeable, on désactive ici par sécurité. */
+            content-visibility: visible;
+        }
+
+        /* ============================================================
+           ANIMAL VOLANT (albatros)
+           ------------------------------------------------------------
+           Traverse l'écran de gauche à droite, sort de l'écran, reste
+           invisible un moment, puis c'est au tour de l'autre animal de
+           traverser. La taille et les durées (traversée / pause) sont
+           définies en JS via des constantes clairement indiquées — voir
+           FLYING_ANIMAL_SIZE_PX, FLYING_CROSS_SECONDS, FLYING_GAP_SECONDS
+           un peu plus bas dans le fichier — et injectées ici sous forme
+           de CSS généré. Une fois injectée, l'animation reste du pur CSS
+           (aucun coût JS en continu, juste un calcul unique au chargement).
+           ============================================================ */
+        .flying-card {
+            left: 0;
+            z-index: 5; /* au-dessus des vagues, sous le titre (grâce à la position, pas au z-index) */
+            cursor: pointer;
+        }
+        .flying-card .flying-visual {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+        }
+        /* Les deux animaux ne sont jamais visibles en même temps (voir alternance
+           générée en JS), donc ils partagent la même position verticale — plus robuste
+           sur les écrans bas que deux hauteurs différentes. */
+        .flying-card-albatros { top: 38%; }
+
+        /* --- DEGRADE DE LUMIERE --- */
+        /* Dégradé de profondeur découpé en plusieurs segments (au lieu d'un bloc unique de
+           12000px) : certains moteurs de rendu mobiles affichent des artefacts (bandes noires)
+           sur les très grands éléments dégradés d'un seul tenant. Le rendu visuel est identique. */
+        .ocean-light-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* Hauteur posée dynamiquement en JS (dépend de l'échelle de profondeur) */
+            pointer-events: none;
+            z-index: 1;
+        }
+        .ocean-light-glow .glow-segment {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 3000px;
+        }
+        /* CORRECTIF : les segments n'ont plus de top/height fixes en px ici — ils sont
+           calculés dynamiquement en JS à partir de la profondeur réelle (depthToPx),
+           pour rester alignés sur les vraies zones océaniques (200m / 1000m / 4000m)
+           quelle que soit l'échelle de dilatation de la zone épipélagique. Avant ce
+           correctif, ces segments gardaient des positions fixes en pixels alors que la
+           dilatation de la zone épipélagique a été appliquée par-dessus : résultat, le
+           noir complet (censé arriver vers 850m) était atteint dès ~140m de profondeur
+           réelle — d'où l'impression que "la nuit tombe trop vite". */
+        .glow-segment-1 { background: linear-gradient(to bottom, var(--color-sea-top) 0%, #0c356a 80%, #0a305f 100%); }
+        .glow-segment-2 { background: linear-gradient(to bottom, #0a305f 0%, #011627 100%); }
+        .glow-segment-3 { background: linear-gradient(to bottom, #011627 0%, #010b14 100%); }
+        .glow-segment-4 { background: linear-gradient(to bottom, #010b14 0%, #000000 100%); }
+
+        /* ============================================================
+           4. NEIGE MARINE SUR 3 PLANS DE PROFONDEUR (PARALLAXE)
+           ============================================================ */
+        /* OPTIM CPU : auparavant, le mouvement de la neige était obtenu en modifiant
+           background-position sur un calque plein écran — une propriété qui force un
+           repaint complet à chaque mise à jour (contrairement à transform, qui reste
+           sur le compositeur GPU). Nouvelle structure : .snow-layer devient une simple
+           "fenêtre" de recadrage plein écran (overflow:hidden), et .snow-layer-fill
+           (le calque qui porte réellement le motif) est surdimensionné d'une largeur de
+           motif de chaque côté, puis déplacé via transform. Comme il déborde toujours
+           d'au moins un motif complet par rapport à la fenêtre, il n'y a jamais de bord
+           vide visible, quelle que soit la valeur de décalage. Rendu final identique au
+           pixel près, juste une technique de déplacement moins coûteuse. */
+        .snow-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 3;
+            overflow: hidden;
+        }
+        .snow-layer-fill {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            background-repeat: repeat;
+            will-change: transform;
+        }
+        .snow-layer-back .snow-layer-fill {
+            top: -320px;
+            height: calc(100% + 640px);
+            background-size: 320px 320px;
+            background-image:
+                radial-gradient(1px 1px at 30px 40px, rgba(220,230,240,0.5), transparent),
+                radial-gradient(1px 1px at 140px 200px, rgba(220,230,240,0.4), transparent),
+                radial-gradient(1px 1px at 230px 90px, rgba(220,230,240,0.45), transparent);
+        }
+        .snow-layer-mid .snow-layer-fill {
+            top: -360px;
+            height: calc(100% + 720px);
+            background-size: 360px 360px;
+            background-image:
+                radial-gradient(1.5px 1.5px at 50px 70px, rgba(230,240,245,0.55), transparent),
+                radial-gradient(1.4px 1.4px at 180px 240px, rgba(230,240,245,0.45), transparent),
+                radial-gradient(1.5px 1.5px at 280px 120px, rgba(230,240,245,0.5), transparent);
+        }
+        .snow-layer-front .snow-layer-fill {
+            top: -400px;
+            height: calc(100% + 800px);
+            background-size: 400px 400px;
+            background-image:
+                radial-gradient(2.2px 2.2px at 60px 80px, rgba(240,248,250,0.75), transparent),
+                radial-gradient(2px 2px at 220px 260px, rgba(240,248,250,0.6), transparent),
+                radial-gradient(2.2px 2.2px at 330px 140px, rgba(240,248,250,0.7), transparent),
+                radial-gradient(2px 2px at 150px 340px, rgba(240,248,250,0.55), transparent);
+        }
+
+        /* --- BIOLUMINESCENCE ALEATOIRE (point 6) --- */
+        .biolum-dot {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+            animation: biolumFlash 1s ease-in-out forwards;
+            will-change: transform, opacity;
+        }
+        @keyframes biolumFlash {
+            0%   { opacity: 0; transform: scale(0.3); }
+            30%  { opacity: 1; transform: scale(1); }
+            70%  { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* --- SOUS-MARIN ET CURSEUR EXTENSION --- */
+        #sub-pilot-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 210px;  /* Taille X1.5 globale */
+            height: 120px;
+            pointer-events: none; /* Laisse passer les clics à travers le container */
+            z-index: 100;
+            /* OPTIM CPU : déplacé via transform (JS) plutôt que left/top ; will-change
+               garde ce petit élément sur sa propre couche GPU en continu. */
+            will-change: transform;
+        }
+
+        .sub-image {
+            position: absolute;
+            /* OPTIM CPU : positionnement géré uniquement via transform (voir JS) au lieu
+               de left/top, pour rester sur le compositeur GPU et éviter un reflow à
+               chaque mouvement de souris. left/top restent à 0 et servent de repère fixe. */
+            left: 0;
+            top: 0;
+            width: 210px; /* Agrandissement X1.5 de l'image du sous-marin */
+            height: auto;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+            will-change: transform;
+        }
+
+        /* Le point de clic précis (Viseur) placé au-dessus et à gauche du sous-marin */
+        .sub-crosshair {
+            position: absolute;
+            left: 0;
+            top: 0;
+            transform: translate(-50%, -50%); /* Centrage parfait et absolu sur la pointe réelle de la souris */
+            width: 12px;
+            height: 12px;
+            background-color: #2dd4bf;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #2dd4bf;
+        }
+
+        /* --- CONTROLEUR AUDIO DESIGN ALIGNÉ ET PLACÉ EN HAUT --- */
+        .audio-control-panel {
+            position: fixed;
+            left: 30px;
+            top: 40px; /* Placé le plus haut possible sur la page */
+            width: 40px; /* Même largeur pour un alignement parfait sur l'axe */
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .volume-pill-container {
+            width: 24px;
+            height: 130px;
+            background-color: #141619;
+            border: 1px solid #22252a;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .volume-track-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%; /* Géré par le JS */
+            background: linear-gradient(to top, #005f73, #0a9396, #2dd4bf); /* Dégradé nuances bleu turquoise */
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
+            transition: height 0.05s linear;
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            outline: none;
+            color: #94a3b8;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .audio-btn:hover { color: #2dd4bf; transform: scale(1.1); }
+        .audio-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* --- INTERFACE TEXTUELLE FIXE (UI) --- */
+        /* ============================================================
+           REGLE VERTICALE DE PROFONDEUR (remplace la ligne pointillée
+           ET l'ancien compteur numérique). Fond transparent (point 4),
+           occupe toute la hauteur de la page (point 2).
+           Flèche blanche statique + échelle qui défile en fonction du scroll
+           ============================================================ */
+        .depth-ruler {
+            position: fixed;
+            right: 34px;
+            top: 24px;
+            bottom: 24px;
+            width: 74px;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            background: transparent;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        body.submerged .depth-ruler { opacity: 1; }
+
+        .ruler-window {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .ruler-track {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .ruler-tick {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            width: 14px;
+            height: 1px;
+            background: rgba(255,255,255,0.5);
+        }
+        .ruler-tick.major {
+            width: 22px;
+            height: 2px;
+            background: #ffffff;
+        }
+        .ruler-label {
+            position: absolute;
+            left: 26px;
+            top: -7px;
+            font-size: 0.68rem;
+            color: #ffffff;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            opacity: .9;
+        }
+        .ruler-arrow {
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-left: 10px solid #ffffff;
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.85));
+            z-index: 2;
+        }
+
+        .zone-indicator {
+            position: fixed;
+            left: 30px;
+            bottom: 40px;
+            width: 40px; /* Même largeur pour un alignement d'axe parfait avec le panel audio */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            opacity: 0;
+            z-index: 80;
+            font-weight: 600;
+            transition: opacity 0.5s;
+        }
+        body.submerged .zone-indicator { opacity: 0.4; }
+
+        /* --- PALIERS DE DESCRIPTION TEXTUELS (STYLE NEAL.FUN) --- */
+        .depth-milestone {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .milestone-title {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: #38bdf8;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .milestone-desc {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            font-weight: 300;
+            line-height: 1.6;
+            opacity: 0.75;
+            color: #f1f5f9;
+        }
+
+        /* --- ANIMAUX --- */
+        .abyss-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 100vh);
+        }
+
+        .animal-card {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 6;
+            /* CORRECTIF : content-visibility n'est plus posé ici (voir .animal-visual
+               plus bas). Posé directement sur .animal-card, il applique un contain:paint
+               implicite à TOUT le sous-arbre, y compris le tooltip d'anecdote positionné
+               au-dessus de la carte (bottom:100%, donc hors de sa boîte) — il se
+               retrouvait rogné/invisible. Idem pour le nom/nom latin/taille : dès que la
+               carte était étroite (petits animaux, ex. tailleRelative:"7vw"), le texte qui
+               dépassait cette largeur était tronqué au lieu de simplement passer à la
+               ligne. En déplaçant content-visibility sur un wrapper interne qui ne
+               contient QUE l'image/vidéo, le tooltip et le texte redeviennent des enfants
+               directs de .animal-card (donc jamais rognés), tout en conservant le gain
+               CPU là où il compte vraiment : le décodage/rendu de l'image ou de la vidéo. */
+        }
+
+        /* Wrapper interne : ne contient que l'image/vidéo, dimensionné par tailleRelative.
+           C'est LUI qui porte le content-visibility (le gros du coût de rendu). */
+        .animal-visual {
+            content-visibility: auto;
+            contain-intrinsic-size: 260px 260px;
+            /* CORRECTIF : content-visibility applique un contain:paint implicite, qui
+               rognait l'animation de nage (translateY jusqu'à -12px) et le halo au
+               survol (drop-shadow flou 25px) dès qu'ils dépassaient la boîte exacte de
+               l'image — d'où le radiolaire "coupé" en haut de son mouvement. On ajoute
+               une marge de respiration interne (padding), compensée par une marge
+               négative de même valeur pour ne PAS agrandir l'empreinte de la carte dans
+               la mise en page (le texte/centrage restent identiques) : cela donne de
+               l'espace à ces effets sans jamais les rogner. */
+            box-sizing: content-box;
+            /* padding/margin réels posés en inline par le JS (proportionnels à la
+               taille de chaque animal — voir génération des cartes) ; ces valeurs
+               ne servent que de repli si jamais l'inline venait à manquer. */
+            padding: 40px;
+            margin: -40px;
+            /* CORRECTIF : masque estompant les bords carrés, déplacé ici (voir
+               commentaire détaillé sur .animal-card img plus bas). Les arrêts sont
+               calculés pour que le fondu commence APRÈS la zone de padding (donc après
+               la photo elle-même ET la marge réservée au halo/à l'animation), et ne
+               termine qu'au tout bord du wrapper — le halo a ainsi toute la place du
+               padding pour s'estomper en douceur au lieu d'être coupé net. */
+            mask-image: radial-gradient(circle, black 60%, transparent 92%);
+            -webkit-mask-image: radial-gradient(circle, black 60%, transparent 92%);
+        }
+
+        .pos-gauche { left: 12%; }
+        .pos-milieu-gauche { left: 28%; }
+        .pos-milieu { left: 50%; transform: translateX(-50%); }
+        .pos-milieu-droite { right: 28%; }
+        .pos-droite { right: 12%; }
+
+        /* Seule l'image de l'animal bouge : nom / nom latin / taille restent statiques */
+        @keyframes swimAnimation {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(var(--img-scale, 1)); }
+            50% { transform: translateY(-12px) rotate(1.2deg) scale(var(--img-scale, 1)); }
+        }
+
+        .animal-card img,
+        .animal-card video {
+            width: 100%; /* S'adapte à la taille du wrapper .animal-visual (configurée en JS) */
+            height: auto;
+            aspect-ratio: 1 / 1; /* Réserve une place approximative tant que le média charge */
+            object-fit: contain;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+            transition: filter 0.3s, opacity 0.6s ease;
+            --img-scale: 1;
+            animation: swimAnimation 6s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+            /* CORRECTIF : le masque qui estompe les bords carrés (voir .animal-visual
+               ci-dessus) a été déplacé sur le wrapper .animal-visual plutôt que posé ici.
+               Raison : posé directement sur l'image, son bord à 100% correspondait à la
+               boîte EXACTE de l'image — et rognait donc aussi le halo au survol
+               (drop-shadow flou 25px), qui déborde justement de cette boîte. En le
+               déplaçant sur le wrapper (qui a de la marge grâce au padding ci-dessus),
+               le halo a la place de s'estomper progressivement au lieu d'être coupé net. */
+        }
+        /* Image et vidéo restent invisibles jusqu'au chargement réel, puis
+           apparaissent en fondu — la marge de 200m laisse largement le temps
+           à la première image de la vidéo d'arriver avant que l'utilisateur
+           ne scrolle jusque-là, donc pas besoin de vignette séparée. */
+        .animal-card img,
+        .animal-card video {
+            opacity: 0;
+        }
+        .animal-card img.loaded,
+        .animal-card video.loaded {
+            opacity: 1;
+        }
+
+        .animal-card:hover img,
+        .animal-card:hover video {
+            filter: drop-shadow(0 0 25px rgba(45, 212, 191, 0.6));
+            --img-scale: 1.04;
+        }
+
+        /* CORRECTIF : largeur mini + max-width raisonnable pour que le nom d'un animal
+           reste lisible (passe à la ligne proprement) même quand tailleRelative est très
+           petit (ex. "7vw" pour une larve minuscule) — indépendamment de la taille de
+           l'image, qui elle continue de suivre fidèlement tailleRelative. */
+        .animal-name, .animal-latin, .animal-size {
+            max-width: max(170px, 30vw);
+            min-width: 90px;
+        }
+        .animal-name { font-size: 1.1rem; font-weight: 600; margin-top: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+        .animal-latin { font-size: 0.85rem; font-style: italic; opacity: 0.6; margin-top: 2px; }
+        .animal-size { font-size: 0.8rem; opacity: 0.4; margin-top: 2px; }
+
+        /* Tooltip Anecdote */
+        .animal-tooltip {
+            position: absolute;
+            bottom: 100%;
+            background: rgba(9, 10, 11, 0.95);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            width: min(260px, 65vw);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            color: #ffffff;
+        }
+        .animal-card:hover .animal-tooltip { opacity: 1; transform: translateY(-10px); }
+
+        /* --- LE FOND DE LA FOSSE --- */
+        .seabed {
+            position: absolute;
+            width: 100%;
+            height: 500px;
+            bottom: 0;
+            left: 0;
+            background: #000000;
+            z-index: 8;
+        }
+
+        .seabed-rocks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #090a0c;
+            clip-path: polygon(0% 45%, 9% 38%, 20% 48%, 31% 33%, 42% 46%, 50% 28%, 61% 42%, 73% 31%, 84% 49%, 93% 36%, 100% 44%, 100% 100%, 0% 100%);
+        }
+
+        .seabed-rocks-front {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111316;
+            clip-path: polygon(0% 55%, 14% 63%, 28% 48%, 43% 58%, 55% 45%, 70% 62%, 82% 51%, 94% 59%, 100% 48%, 100% 100%, 0% 100%);
+            opacity: 0.95;
+        }
+
+        .seabed-marker {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-family: var(--font-title);
+            z-index: 10;
+            width: 90%;
+        }
+
+        .seabed-marker h2 {
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            color: #38bdf8;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .seabed-marker p {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            opacity: 0.5;
+        }
+
+        /* ============================================================
+           7. NUAGE DE SEDIMENTS AU FOND (déclenché une fois au contact du fond)
+           ============================================================ */
+        .sediment-cloud {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 55vh;
+            pointer-events: none;
+            z-index: 9;
+            overflow: visible;
+        }
+        .sediment-particle {
+            position: absolute;
+            bottom: -20px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(130,110,90,0.55), rgba(95,80,65,0.25) 55%, transparent 75%);
+            filter: blur(7px);
+            opacity: 0;
+        }
+        .sediment-cloud.active .sediment-particle {
+            animation: sedimentRise 12s ease-out forwards;
+        }
+        .sediment-particle.p1 { left: 4%;  width: 260px; height: 160px; animation-delay: 0s; }
+        .sediment-particle.p2 { left: 18%; width: 190px; height: 120px; animation-delay: .15s; }
+        .sediment-particle.p3 { left: 33%; width: 300px; height: 175px; animation-delay: .05s; }
+        .sediment-particle.p4 { left: 50%; width: 210px; height: 130px; animation-delay: .25s; }
+        .sediment-particle.p5 { left: 65%; width: 270px; height: 160px; animation-delay: .1s; }
+        .sediment-particle.p6 { left: 80%; width: 200px; height: 125px; animation-delay: .3s; }
+        .sediment-particle.p7 { left: 42%; width: 340px; height: 195px; animation-delay: 0s; }
+        .sediment-particle.p8 { left: 92%; width: 170px; height: 105px; animation-delay: .2s; }
+        .sediment-particle.p9 { left: 10%;  width: 155px; height: 100px; animation-delay: .35s; }
+
+        @keyframes sedimentRise {
+            0%   { opacity: 0;    transform: translateY(0) scale(0.8); }
+            10%  { opacity: 0.95; transform: translateY(-140px) scale(1.1); }
+            30%  { opacity: 0.9;  transform: translateY(-240px) scale(1.35); }
+            60%  { opacity: 0.6;  transform: translateY(-160px) scale(1.2); }
+            100% { opacity: 0;    transform: translateY(0px) scale(0.9); }
+        }
+
+        /* --- BULLES --- */
+        .bubble {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            bottom: -60px;
+            /* OPTIM CPU : itération unique (au lieu de "infinite") afin que l'évènement
+               'animationend' se déclenche réellement — c'est ce qui permet de recycler
+               l'élément dans le pool sans timer JS dédié. Le rendu est identique : dans
+               l'ancienne version, la bulle était de toute façon détruite par un
+               setTimeout juste après un seul cycle. */
+            animation: floatUp linear 1;
+            will-change: transform, opacity;
+            /* OPTIM CPU : ces éléments sont désormais recyclés depuis un pool fixe
+               (voir JS) plutôt que créés/détruits en continu. Masquées par défaut. */
+            display: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-110vh) translateX(35px); opacity: 0; }
+        }
+
+        /* --- POPUP MEDIAS (CURSEUR RESTAURÉ) --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Force la réapparition du curseur de la souris à l'ouverture d'une popup/anecdote */
+        .popup-overlay.active, .popup-overlay.active * {
+            cursor: default !important;
+        }
+        .popup-overlay.active .popup-close, .popup-overlay.active button, .popup-overlay.active video {
+            cursor: pointer !important;
+        }
+
+        .popup-overlay.active { opacity: 1; pointer-events: auto; }
+        .popup-content { position: relative; max-width: 85vw; max-height: 85vh; transform: scale(0.9); transition: transform 0.3s ease; }
+        .popup-overlay.active .popup-content { transform: scale(1); }
+        .popup-content img, .popup-content video { max-width: 100%; max-height: 85vh; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .popup-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .surface-text { top: 10%; }
+            .surface-text h1 { font-size: 2.2rem; }
+            .surface-signature { font-size: 1.3rem; margin-bottom: 14px; }
+            .sun-glow { width: 85px; height: 85px; left: 58%; top: 10%; }
+            .depth-ruler { right: 14px; width: 56px; top: 14px; bottom: 14px; }
+            .ruler-label { font-size: 0.6rem; left: 24px; }
+            .zone-indicator { left: 15px; width: 40px; font-size: 0.75rem; bottom: 30px; }
+            .audio-control-panel { left: 15px; width: 40px; top: 20px; bottom: auto; }
+            .seabed-marker h2 { font-size: 1.5rem; }
+            #sub-pilot-container { width: 135px; height: 75px; }
+            .sub-image { width: 135px; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" src="Vid/abysse.mp3" loop></audio>
+
+    <div id="sub-pilot-container">
+        <img src="Images/sousmarin.webp" alt="Sous-marin pilote" class="sub-image">
+        <div class="sub-crosshair"></div>
+    </div>
+
+    <div class="audio-control-panel">
+        <div class="volume-pill-container" id="vol-slider">
+            <div class="volume-track-fill" id="vol-fill"></div>
+        </div>
+        <button class="audio-btn" id="mute-btn" title="Couper/Activer le son">
+            <svg id="speaker-icon" viewBox="0 0 24 24">
+                <path d="M5 9v6h4l5 5V4L9 9H5zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16 4.03v2.02c2.61.81 4.5 3.24 4.5 6.13s-1.89 5.32-4.5 6.13v2.02c3.72-.86 6.5-4.17 6.5-8.15s-2.78-7.29-6.5-8.15z"/>
+            </svg>
+        </button>
+    </div>
+
+    <section class="surface">
+        <div class="surface-sky">
+            <div class="sun-glow"></div>
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+        </div>
+
+        <div class="horizon-haze"></div>
+
+        <!-- Point 2 : "par M. Barneix" en calligraphie, sous le titre principal -->
+        <div class="surface-text">
+            <h1>Plongée dans les abysses</h1>
+            <p class="surface-signature">par M. Barneix</p>
+            <p class="surface-subtitle">Faites défiler (molette / trackpad) pour commencer la descente...</p>
+        </div>
+
+        <!-- Animal volant (albatros) — rempli par JS -->
+        <div id="flying-animals-container"></div>
+
+        <div class="surface-ocean">
+            <svg class="wave" viewBox="0 0 1200 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.0,70.0 L15.0,75.0 L30.0,79.9 L45.0,84.5 L60.0,88.8 L75.0,92.6 L90.0,95.9 L105.0,98.5 L120.0,100.4 L135.0,101.6 L150.0,102.0 L165.0,101.6 L180.0,100.4 L195.0,98.5 L210.0,95.9 L225.0,92.6 L240.0,88.8 L255.0,84.5 L270.0,79.9 L285.0,75.0 L300.0,70.0 L315.0,65.0 L330.0,60.1 L345.0,55.5 L360.0,51.2 L375.0,47.4 L390.0,44.1 L405.0,41.5 L420.0,39.6 L435.0,38.4 L450.0,38.0 L465.0,38.4 L480.0,39.6 L495.0,41.5 L510.0,44.1 L525.0,47.4 L540.0,51.2 L555.0,55.5 L570.0,60.1 L585.0,65.0 L600.0,70.0 L615.0,75.0 L630.0,79.9 L645.0,84.5 L660.0,88.8 L675.0,92.6 L690.0,95.9 L705.0,98.5 L720.0,100.4 L735.0,101.6 L750.0,102.0 L765.0,101.6 L780.0,100.4 L795.0,98.5 L810.0,95.9 L825.0,92.6 L840.0,88.8 L855.0,84.5 L870.0,79.9 L885.0,75.0 L900.0,70.0 L915.0,65.0 L930.0,60.1 L945.0,55.5 L960.0,51.2 L975.0,47.4 L990.0,44.1 L1005.0,41.5 L1020.0,39.6 L1035.0,38.4 L1050.0,38.0 L1065.0,38.4 L1080.0,39.6 L1095.0,41.5 L1110.0,44.1 L1125.0,47.4 L1140.0,51.2 L1155.0,55.5 L1170.0,60.1 L1185.0,65.0 L1200.0,70.0 L1200,150 L0,150 Z" style="fill: var(--color-sea-top);"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Point 4 : neige marine sur 3 plans de profondeur (parallaxe) -->
+    <div class="snow-layer snow-layer-back" id="snow-back"><div class="snow-layer-fill" id="snow-back-fill"></div></div>
+    <div class="snow-layer snow-layer-mid" id="snow-mid"><div class="snow-layer-fill" id="snow-mid-fill"></div></div>
+    <div class="snow-layer snow-layer-front" id="snow-front"><div class="snow-layer-fill" id="snow-front-fill"></div></div>
+
+    <!-- Règle verticale de profondeur (remplace la ligne pointillée ET l'ancien compteur numérique) -->
+    <div class="depth-ruler" id="depth-ruler">
+        <div class="ruler-arrow"></div>
+        <div class="ruler-window">
+            <div class="ruler-track" id="ruler-track"></div>
+        </div>
+    </div>
+
+    <div class="zone-indicator" id="zone-txt">Zone Épipélagique</div>
+
+    <main class="abyss-container" id="abyss-space">
+
+        <!-- Dégradé de profondeur : DANS le même conteneur que tout le reste du contenu
+             profond (et non plus positionné indépendamment via 100vh), pour qu'il défile
+             physiquement avec les animaux/paliers, sans aucun calcul séparé qui pourrait
+             se désynchroniser pendant un scroll rapide sur mobile. -->
+        <div class="ocean-light-glow">
+            <div class="glow-segment glow-segment-1"></div>
+            <div class="glow-segment glow-segment-2"></div>
+            <div class="glow-segment glow-segment-3"></div>
+            <div class="glow-segment glow-segment-4"></div>
+        </div>
+
+        <div id="milestones-group"></div>
+
+        <div class="seabed" id="ocean-floor">
+            <div class="seabed-rocks"></div>
+            <div class="seabed-rocks-front"></div>
+            <div class="seabed-marker">
+                <h2>Fosse des Mariannes</h2>
+                <p>10 924 mètres — Vous avez touché le point le plus profond sur Terre.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Point 7 : nuage de sédiments soulevé au contact du fond -->
+    <div class="sediment-cloud" id="sediment-cloud">
+        <span class="sediment-particle p1"></span>
+        <span class="sediment-particle p2"></span>
+        <span class="sediment-particle p3"></span>
+        <span class="sediment-particle p4"></span>
+        <span class="sediment-particle p5"></span>
+        <span class="sediment-particle p6"></span>
+        <span class="sediment-particle p7"></span>
+        <span class="sediment-particle p8"></span>
+        <span class="sediment-particle p9"></span>
+    </div>
+
+    <div class="popup-overlay" id="media-popup">
+        <div class="popup-content" id="popup-box">
+            <button class="popup-close" id="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script>
+    // CONFIGURATION DES PALIER TEXTUELS
+    const paliersInfo = [
+        {
+            profondeur: 200,
+            titre: "Zone Crépusculaire (Mésopélagique)",
+            description: "À partir d'ici, la lumière du soleil décroît rapidement. C'est le royaume des ombres où commence la photosynthèse impossible."
+        },
+        {
+            profondeur: 1000,
+            titre: "Zone de Minuit (Bathypélagique)",
+            description: "Plus aucun rayon de soleil ne traverse cette couche. La faim et l'obscurité totale règnent. Pour survivre et chasser, la majorité des créatures créent leur propre lumière : la bioluminescence."
+        },
+        {
+            profondeur: 4000,
+            titre: "La Plaine Abyssale (Abyssopélagique)",
+            description: "L'eau y est proche du point de congélation (environ 2°C) et la pression est écrasante, équivalente à celle d'un éléphant posé sur un timbre-poste."
+        },
+        {
+            profondeur: 6000,
+            titre: "Les Tranchées Hadales (Hadopélagique)",
+            description: "Nommée d'après Hadès, dieu des enfers. Ce sont les failles et canyons les plus profonds et inexplorés de notre planète."
+        },
+
+        {
+            profondeur: 8000,
+            titre: "Under pressure",
+            description: "A cette profondeur la pression est telle que cela revient à poser le poids d’un éléphant sur … un pouce."
+        },
+
+        {
+            profondeur: 9260,
+            titre: "Pionniers",
+            description: "Deux hommes, Jacques Piccard et Don Walsh, ont tenté la première descente jusqu’au point le plus dans les océans."
+        },
+
+        {
+            profondeur: 9460,
+            titre: "Crraaack",
+            description: "Durant la descente, une vitre d’un des hublots a craqué et le sous-marin a tremblé dans son intégralité."
+        },
+
+        {
+            profondeur: 9560,
+            titre: "...",
+            description: "Mais ils ont continué…"
+        },
+
+        {
+            profondeur: 10770,
+            titre: "The Challenger Deep",
+            description: "Jacques Piccard et Don Walsh, les deux premières personnes à toucher le point le plus profond sur Terre."
+        },
+
+
+        {
+            profondeur: 10900,
+            titre: "To the Moon and back",
+            description: "Seulement sept personnes, dont James Cameron, sont descendues dans la fosse des Mariannes à ce jour (2026), ce qui est moins que le nombre de personnes ayant marché sur la Lune."
+        },
+    ];
+
+    // DATA ANIMAUX AVEC TAILLE RELATIVE (En % de la largeur écran 'vw')
+    const animaux = [
+      {
+          nom: "Ours Blanc",
+          nomLatin: "Ursus maritimus",
+          taille: "2.5 m",
+          tailleRelative: "36vw",
+          profondeur: 25,
+          anecdote: "Le plus grand carnivore terrestre, à la peau noir et aux poils creux et transparents.",
+          position: "gauche",
+          image: "images/icone/ourspo.webm",
+          mediaClick: "images/oursp.webp"
+      },
+
+      {
+          nom: "Poisson Clown",
+          nomLatin: "Enteroctopus dofleini",
+          taille: "10 cm",
+          tailleRelative: "7vw",
+          profondeur: 30,
+          anecdote: "En l’absence de femelle, le plus gros mâle du groupe change de sexe et devient une femelle.",
+          position: "droite",
+          image: "images/icone/poissonclown.webm",
+          mediaClick: "images/poisssonc.webp"
+      },
+
+      {
+          nom: "Méduse Psychedelique",
+          nomLatin: "Crossota millsae",
+          taille: "30 cm",
+          tailleRelative: "7vw",
+          profondeur: 3980,
+          anecdote: "Ses tentacules lumineux donnent l'impression d'un feu d'artifice dans les abysses.",
+          position: "droite",
+          image: "images/icone/meduseps.webm",
+          mediaClick: "images/medusepsy.mp4"
+      },
+
+      {
+          nom: "Poisson Revenant",
+          nomLatin: "Macropinna microstoma",
+          taille: "15 cm",
+          tailleRelative: "10vw",
+          profondeur: 2380,
+          anecdote: "Sa tête est transparente et ses yeux tubulaires peuvent pivoter vers le haut ou vers l'avant",
+          position: "milieu-gauche",
+          image: "images/icone/poissonrev.webm",
+          mediaClick: "images/PoissonRevenant.mp4"
+      },
+
+      {
+          nom: "Siphonophore Géant",
+          nomLatin: "Agalma elegans",
+          taille: "45 m",
+          tailleRelative: "30vw",
+          profondeur: 450,
+          anecdote: "C’est l’animal le plus long du monde, il est constitué de plusieurs individus, qui mit bout à bout, mesure 45 m.",
+          position: "droite",
+          image: "images/icone/sipho.webm",
+          mediaClick: "images/siphonophore.webp"
+      },
+
+      {
+          nom: "Corail Bambou",
+          nomLatin: "Alcyonacea sp.",
+          taille: "2 m",
+          tailleRelative: "18vw",
+          profondeur: 3280,
+          anecdote: "Contrairement à ses cousins photosynthétiques, ce corail filtre l’eau pour se nourrir. Il grandit de quelques millimètres chaque année.",
+          position: "gauche",
+          image: "images/icone/alcyo.webm",
+          mediaClick: "images/corailbambou.webp"
+      },
+
+      {
+          nom: "Poisson Thermomètre",
+          nomLatin: "Carapus acus",
+          taille: "20 cm",
+          tailleRelative: "15vw",
+          profondeur: 150,
+          anecdote: "Pour se cacher des prédateurs, ce poisson se cache à l’intérieur de l’anus d’un concombre de mer.",
+          position: "gauche",
+          image: "images/icone/carapus.webm",
+          mediaClick: "images/poissonthermo.webp"
+      },
+
+      {
+          nom: "Coccolithophores",
+          nomLatin: "Emiliania huxleyi",
+          taille: "0.0002 cm",
+          tailleRelative: "2vw",
+          profondeur: 120,
+          anecdote: "Ce phytoplancton produit une carapace calcaire très esthétique. Lorsqu’il meut et tombe au fond de l’océan il pourra contribuer à former de la craie des millions d’années plus tard.",
+          position: "gauche",
+          image: "images/icone/Emiliania.webp",
+          mediaClick: "images/cocolithophore.webp"
+      },
+
+      {
+          nom: "Corail cerveau",
+          nomLatin: "Diploria labyrinthiformis",
+          taille: "2 m",
+          tailleRelative: "10vw",
+          profondeur: 2,
+          anecdote: "Certains coraux construisent des récifs visibles depuis l'espace.",
+          position: "droite",
+          image: "images/icone/Diploria .webp",
+          mediaClick: "images/corailc.webp"
+      },
+
+
+      {
+          nom: "Requin Grande-Gueule",
+          nomLatin: "Megachasma pelagios",
+          taille: "7 m",
+          tailleRelative: "30vw",
+          profondeur: 4600,
+          anecdote: "Une des espèces de requins les plus rares au monde ; découverte seulement en 1976.",
+          position: "droite",
+          image: "images/icone/requinGG.webm",
+          mediaClick: "images/requingrandegueule.webp"
+      },
+
+      {
+          nom: "Éléphant de Mer du Sud",
+          nomLatin: "Mirounga leonina",
+          taille: "6.5 m",
+          tailleRelative: "45vw",
+          profondeur: 2400,
+          anecdote: "Champion des phoques plongeurs : il passe parfois plus de 90 % de sa vie en mer et peut enchaîner des centaines de plongées successives.",
+          position: "droite",
+          image: "images/icone/elephant.webm",
+          mediaClick: "images/elephant.mp4"
+      },
+
+      {
+          nom: "Pieuvre Dumbo ",
+          nomLatin: "Grimpoteuthis sp.",
+          taille: "30 cm",
+          tailleRelative: "11vw",
+          profondeur: 7150,
+          anecdote: "Utilise des nageoires rappelant les oreilles de Dumbo.",
+          position: "milieu-droite",
+          image: "images/icone/pieuvreD.webm",
+          mediaClick: "images/pieuvredumbo.mp4"
+      },
+
+      {
+          nom: "Saumon de l'Atlantique",
+          nomLatin: "Salmon salar",
+          taille: "150 cm",
+          tailleRelative: "15vw",
+          profondeur: 12,
+          anecdote: "Les saumons retournent dans la rivière où ils ont vu le jour, pour se reproduire.",
+          position: "milieu",
+          image: "images/icone/saumon.webm",
+          mediaClick: "images/pyramide.webp"
+      },
+
+      {
+          nom: "Baleine de Cuvier",
+          nomLatin: "Ziphius cavirostris",
+          taille: "7 m",
+          tailleRelative: "35vw",
+          profondeur: 3070,
+          anecdote: "Détient le record de plongée chez les mammifères : près de 3 heures sous l'eau (3000 mètres).",
+          position: "droite",
+          image: "images/icone/cuvier.webm",
+          mediaClick: "images/baleinecuvier.webp"
+      },
+
+      {
+          nom: "Epave du Titanic",
+          nomLatin: "Homo sapiens",
+          taille: "269 m",
+          tailleRelative: "50vw",
+          profondeur: 3800,
+          anecdote: "Le 14 avril 1912, le Titanic sombre jusqu’à sa destination finale, 3 800 mètres plus bas.",
+          position: "droite",
+          image: "images/icone/Titanic.webp",
+          mediaClick: "images/titanic.mp4"
+      },
+
+      {
+          nom: "Sous-marin Titan",
+          nomLatin: "Homo sapiens (pas trop)",
+          taille: "6.7 m",
+          tailleRelative: "15vw",
+          profondeur: 3780,
+          anecdote: "Cinq personnes trouvent la mort dans l’implosion du sous-marin à destination du Titanic. L’engin était piloté par… une manette de jeu vidéo Logitech.",
+          position: "gauche",
+          image: "images/icone/Titan.webp",
+          mediaClick: "images/titan2.webp"
+      },
+
+      {
+          nom: "Navire USS Johnston",
+          nomLatin: "Homo sapiens",
+          taille: "115 m",
+          tailleRelative: "35vw",
+          profondeur: 6456,
+          anecdote: "Le navire UUS Johnston a coulé durant la seconde guerre mondiale. C’est l’épave la plus profonde jamais découverte. ",
+          position: "milieu",
+          image: "images/icone/USSj.webp",
+          mediaClick: "images/USS.mp4"
+      },
+
+
+      {
+          nom: "Méduse Atolla",
+          nomLatin: "Atolla wyvillei",
+          taille: "15 cm",
+          tailleRelative: "15vw",
+          profondeur: 4780,
+          anecdote: "Lorsqu'elle est attaquée, elle émet un signal lumineux attirant les prédateurs de son prédateur.",
+          position: "gauche",
+          image: "images/icone/atolla.webm",
+          mediaClick: "images/meduseatolla.mp4"
+      },
+
+      {
+          nom: "Hoplostèthe orange",
+          nomLatin: "Hoplostethus atlanticus",
+          taille: "75 cm",
+          tailleRelative: "12vw",
+          profondeur: 1800,
+          anecdote: "Esperance de vie 200 ans et maturité sexuelle atteinte autour de 30 ans !",
+          position: "milieu",
+          image: "images/icone/hoplo.webm",
+          mediaClick: "images/hoplostète.webp"
+      },
+
+      {
+          nom: "Dragon Abyssal",
+          nomLatin: "Idiacanthus atlanticus",
+          taille: "40 cm",
+          tailleRelative: "17vw",
+          profondeur: 2000,
+          anecdote: "Peut produire une lumière rouge invisible pour ses proies. Voir sans être vu… Il est considéré comme un poisson « ultra-noir » car il ne reflète pratiquement aucune lumière.",
+          position: "milieu",
+          image: "images/icone/dragon.webm",
+          mediaClick: "images/dragon.mp4"
+      },
+
+      {
+          nom: "Squalelet Féroce",
+          nomLatin: "Isistius brasiliensis",
+          taille: "56 cm",
+          tailleRelative: "19vw",
+          profondeur: 3700,
+          anecdote: "Le cookie cutter shark ou requin emporte-pièce, arrache des morceaux de chair parfaitement circulaires à ses victimes.",
+          position: "milieu",
+          image: "images/icone/requinep.webm",
+          mediaClick: "images/squalelet.webp"
+      },
+
+      {
+          nom: "Crabe Yeti",
+          nomLatin: "Kiwa hirsuta",
+          taille: "15 cm",
+          tailleRelative: "14vw",
+          profondeur: 2200,
+          anecdote: "Cultive des bactéries sur ses pinces poilues.",
+          position: "milieu-gauche",
+          image: "images/icone/crabeyeti.webm",
+          mediaClick: "images/crabeyeti.webp"
+      },
+
+
+      {
+          nom: "Méduse Ventre Sanglant",
+          nomLatin: "Lampocteis cruentiventer",
+          taille: "1.5 m",
+          tailleRelative: "14vw",
+          profondeur: 1710,
+          anecdote: "Son estomac rouge masque la lumière des proies bioluminescentes qu'elle digère, évitant ainsi de révéler sa présence aux prédateurs.",
+          position: "milieu-gauche",
+          image: "images/icone/lampoe.webm",
+          mediaClick: "images/meduseaventre.mp4"
+      },
+
+      {
+          nom: "Coelacanth",
+          nomLatin: "Latimeria chalumnae",
+          taille: "2 m",
+          tailleRelative: "19vw",
+          profondeur: 700,
+          anecdote: "On le croyait éteint depuis 66 millions d'années avant sa redécouverte en 1938.",
+          position: "milieu-gauche",
+          image: "images/icone/coelacanth.webm",
+          mediaClick: "images/coelacanth.webp"
+      },
+
+      {
+          nom: "Calmar Cacatoès",
+          nomLatin: "Leachia pacifica",
+          taille: "20 cm",
+          tailleRelative: "19vw",
+          profondeur: 1620,
+          anecdote: "Son corps devient transparent à l'âge adulte.",
+          position: "gauche",
+          image: "images/icone/calmarca.webm",
+          mediaClick: "images/calmarc.webp"
+      },
+
+      {
+          nom: "Bernacle",
+          nomLatin: "Lepas anatifera",
+          taille: "10 cm",
+          tailleRelative: "8vw",
+          profondeur: 3,
+          anecdote: "Son pénis peut atteindre 8 fois la longueur de son corps, record du règne animal. S’il ne trouve aucun partenaire à proximité, il s’autoféconde !",
+          position: "milieu-gauche",
+          image: "images/icone/Lepas.webp",
+          mediaClick: "images/bernacle.webp"
+      },
+
+      {
+          nom: "Chiton abyssal",
+          nomLatin: "Leptochiton sp",
+          taille: "5 cm",
+          tailleRelative: "8vw",
+          profondeur: 6900,
+          anecdote: "Certains chitons possèdent des dents renforcées à la magnétite, plus dures que de nombreux métaux.",
+          position: "droite",
+          image: "images/icone/chiton.webm",
+          mediaClick: "images/chiton.webp"
+      },
+
+      {
+          nom: "Crabe-araignée du Japon",
+          nomLatin: "Macrocheira kaempferi",
+          taille: "3.8 m",
+          tailleRelative: "35vw",
+          profondeur: 640,
+          anecdote: "Plus grand arthropode vivant du monde.",
+          position: "milieu",
+          image: "images/icone/crabea.webm",
+          mediaClick: "images/crabearaignée.webp"
+      },
+
+      {
+          nom: "Kelp Géant",
+          nomLatin: "Macrocystis pyrifera",
+          taille: "45 m",
+          tailleRelative: "35vw",
+          profondeur: 60,
+          anecdote: "Peut pousser de plus de 50 cm par jour.",
+          position: "milieu",
+          image: "images/icone/kelp.webm",
+          mediaClick: "images/kelp.webp"
+      },
+
+      {
+          nom: "Poisson-Ogre",
+          nomLatin: "Anoplogaster cornuta",
+          taille: "18 cm",
+          tailleRelative: "15vw",
+          profondeur: 5040,
+          anecdote: "Possède les plus grandes dents proportionnellement à la taille du corps chez les poissons.",
+          position: "droite",
+          image: "images/icone/poissonogre.webm",
+          mediaClick: "images/PoissonOgre.mp4"
+      },
+
+      {
+          nom: "Manchot Empereur",
+          nomLatin: "Aptenodytes forsteri",
+          taille: "120 cm",
+          tailleRelative: "25vw",
+          profondeur: 570,
+          anecdote: "Le record de plongée en profondeur chez les oiseaux est détenu par le manchot empereur, qui a été enregistré à des profondeurs de plus de 530 m !",
+          position: "droite",
+          image: "images/icone/manchot.webm",
+          mediaClick: "images/manchot.webp"
+      },
+
+      {
+          nom: "Béluga",
+          nomLatin: "Delphinapterus leucas",
+          taille: "4.5 m",
+          tailleRelative: "24vw",
+          profondeur: 120,
+          anecdote: "Surnommé le canari des mers à cause des sifflements aigus qu'il utilise pour communiquer.",
+          position: "milieu-droite",
+          image: "images/icone/beluga.webm",
+          mediaClick: "images/beluga.webp"
+      },
+      {
+          nom: "Grand Requin Blanc",
+          nomLatin: "Carcharodon carcharias",
+          taille: "7.5 m",
+          tailleRelative: "40vw",
+          profondeur: 350,
+          anecdote: "Il peut détecter une goutte de sang dans 4.6 millions de litres d’eau. Au cours de sa vie, il pourra avoir jusqu’à 50 000 dents.",
+          position: "gauche",
+          image: "images/icone/requinblanc.webm",
+          mediaClick: "images/requinblanc.mp4"
+      },
+
+      {
+          nom: "Homme apnée no-limit",
+          nomLatin: "Homo sapiens",
+          taille: "1.8 m",
+          tailleRelative: "27vw",
+          profondeur: 253,
+          anecdote: "Herbert Nitsch (Autriche) a atteint 253 mètres en 2012.",
+          position: "gauche",
+          image: "images/icone/HomoApnea.webm",
+          mediaClick: "images/herbert.webp"
+      },
+
+      {
+          nom: "Homme scaphandre",
+          nomLatin: "Homo sapiens",
+          taille: "1.8 m",
+          tailleRelative: "24vw",
+          profondeur: 332,
+          anecdote: "En 2014, Ahmed Gabr, bat le record de la plongée avec scaphandre la plus profonde : 332 m ! 12 minutes de descentes, 15 heures de remontée.",
+          position: "droite",
+          image: "images/icone/HomoSca.webm",
+          mediaClick: "images/Ahmed.webp"
+      },
+
+      {
+          nom: "Pieuvre géante du Pacifique",
+          nomLatin: "Enteroctopus dofleini",
+          taille: "9 m",
+          tailleRelative: "35vw",
+          profondeur: 1480,
+          anecdote: "3 cœurs, 9 cerveaux, le sang bleu et 500 millions de neurones !",
+          position: "gauche",
+          image: "images/icone/pieuvrepacifique.webm",
+          mediaClick: "images/pieuvregeante.webp"
+      },
+
+      {
+          nom: "Méduse Crinière de Lion",
+          nomLatin: "Cyanea capillata",
+          taille: "36.5 m",
+          tailleRelative: "25vw",
+          profondeur: 41,
+          anecdote: "La plus grosse méduse du monde qui possède 800 tentacules ! ",
+          position: "milieu",
+          image: "images/icone/medusec.webm",
+          mediaClick: "images/MeduseCriniere.mp4"
+      },
+
+      {
+          nom: "Raie Pastenague",
+          nomLatin: "Dasyatis brevicaudata",
+          taille: "2 m",
+          tailleRelative: "25vw",
+          profondeur: 165,
+          anecdote: "Le 4 septembre 2006, Steve Irwin est mortellement piqué au cœur par une raie pastenague alors qu'il plongeait pour un tournage.",
+          position: "milieu",
+          image: "images/icone/raiepa.webm",
+          mediaClick: "images/raiep.webp"
+      },
+
+
+      {
+          nom: "Requin Lutin",
+          nomLatin: "Mitsukurina owstoni",
+          taille: "3.8 m",
+          tailleRelative: "25vw",
+          profondeur: 1362,
+          anecdote: "Véritable fossile vivant, sa mâchoire se projette littéralement vers l'avant pour capturer ses proies.",
+          position: "gauche",
+          image: "images/icone/requinlutin.webm",
+          mediaClick: "images/requinlutin.webp"
+      },
+
+      {
+          nom: "Raie-Manta Géante",
+          nomLatin: "Mobula birostris",
+          taille: "9 m",
+          tailleRelative: "39vw",
+          profondeur: 1050,
+          anecdote: "Véritable fossile vivant, sa mâchoire se projette littéralement vers l'avant pour capturer ses proies.",
+          position: "gauche",
+          image: "images/icone/raiemanta.webm",
+          mediaClick: "images/raiem.webp"
+      },
+
+      {
+          nom: "Squill Multicolore",
+          nomLatin: "Odontodactylus scyllarus",
+          taille: "18 cm",
+          tailleRelative: "10vw",
+          profondeur: 70,
+          anecdote: "La crevette-mante possède une force de frappe si puissante qu’elle ait bouillir l’eau à proximité (cavitation). Avec sa force, un humain pourrait lancer une balle de baseball dans l’espace.",
+          position: "milieu-droite",
+          image: "images/icone/squill.webm",
+          mediaClick: "images/squill.mp4"
+      },
+
+      {
+          nom: "Lectocéphale d'anguille",
+          nomLatin: "Muraenid sp.",
+          taille: "1.5 m",
+          tailleRelative: "5vw",
+          profondeur: 100,
+          anecdote: "Les larves de murènes semblent transparentes.",
+          position: "milieu-droite",
+          image: "images/icone/lecto.webm",
+          mediaClick: "images/lectocephale.mp4"
+      },
+
+      {
+          nom: "Poisson Lune",
+          nomLatin: "Mola mola",
+          taille: "3 m",
+          tailleRelative: "39vw",
+          profondeur: 800,
+          anecdote: "Peut pondre jusqu'à 300 millions d'œufs. Il est aussi le plus gros poisson osseux au monde.",
+          position: "gauche",
+          image: "images/icone/poissonlune.webm",
+          mediaClick: "images/poissonlune.mp4"
+      },
+
+      {
+          nom: "Requin Bulldog",
+          nomLatin: "Carcharhinus leucas",
+          taille: "3.5 m",
+          tailleRelative: "21vw",
+          profondeur: 150,
+          anecdote: "Peut vivre aussi bien en eau douce qu'en eau de mer. Un des requins les plus dangereux au monde.",
+          position: "droite",
+          image: "images/icone/requinbul.webm",
+          mediaClick: "images/requinb.webp"
+      },
+
+      {
+          nom: "Baleine Bleue",
+          nomLatin: "Balaenoptera musculus",
+          taille: "33 m",
+          tailleRelative: "60vw",
+          profondeur: 500,
+          anecdote: "Plus grand animal ayant jamais vécu sur Terre. Son cœur peut peser 180 kg.",
+          position: "gauche",
+          image: "images/icone/baleinebleue.webm",
+          mediaClick: "images/baleineb.mp4"
+      },
+
+      {
+          nom: "Calmar Géant",
+          nomLatin: "Architeuthis dux",
+          taille: "12 m",
+          tailleRelative: "50vw",
+          profondeur: 1580,
+          anecdote: "Ses yeux ont la taille d'une assiette pour capter la moindre lueur dans le noir absolu.",
+          position: "droite",
+          image: "images/icone/calmargeant.webm",
+          mediaClick: "images/CalmarGeant.mp4"
+      },
+
+      {
+          nom: "Cachalot",
+          nomLatin: "Physeter macrocephalus",
+          taille: "15 m",
+          tailleRelative: "50vw",
+          profondeur: 2250,
+          anecdote: "Plus grand prédateur à dents de la planète. Ses clics peuvent dépasser 230 décibels, parmi les sons les plus puissants du règne animal.",
+          position: "milieu",
+          image: "images/icone/Cachalot.webm",
+          mediaClick: "images/cachalot.webp"
+      },
+
+      {
+          nom: "Orque",
+          nomLatin: "Orcinus orca",
+          taille: "9 m",
+          tailleRelative: "30vw",
+          profondeur: 300,
+          anecdote: "Chaque groupe possède une véritable culture et des techniques de chasse transmises.",
+          position: "milieu",
+          image: "images/icone/orque.webm",
+          mediaClick: "images/orque.mp4"
+      },
+
+      {
+          nom: "Requin Pelerin",
+          nomLatin: "Cetorhinus maximus",
+          taille: "12 m",
+          tailleRelative: "50vw",
+          profondeur: 1200,
+          anecdote: "Deuxième plus gros poisson du monde.",
+          position: "gauche",
+          image: "images/icone/requinpel.webm",
+          mediaClick: "images/requinp.webp"
+      },
+
+      {
+          nom: "Requin Mako",
+          nomLatin: "Isurus oxyrinchus",
+          taille: "4.5 m",
+          tailleRelative: "23vw",
+          profondeur: 900,
+          anecdote: "Peut dépasser 70 km/h, record chez les requins.",
+          position: "droite",
+          image: "images/icone/requinmako.webm",
+          mediaClick: "images/requinmako.mp4"
+      },
+
+      {
+          nom: "La bérardie de Baird",
+          nomLatin: "Berardius bairdii",
+          taille: "12 m",
+          tailleRelative: "38vw",
+          profondeur: 3000,
+          anecdote: "Fait partie des champions mondiaux de l'apnée profonde ; peut rester plus d'une heure sous l'eau.",
+          position: "milieu",
+          image: "images/icone/berardie1.webm",
+          mediaClick: "images/berardie.mp4"
+      },
+
+      {
+          nom: "Ver Zombie",
+          nomLatin: "Osedax sp.",
+          taille: "5 cm",
+          tailleRelative: "10vw",
+          profondeur: 4200,
+          anecdote: "Les femelles vivent dans les os de baleines mortes. Les mâles sont minuscules et vivent à l'intérieur des femelles. Parfois 600 mâles à l’intérieur d’une femelle !",
+          position: "milieu-droite",
+          image: "images/icone/verzomb.webm",
+          mediaClick: "images/verzombie.mp4"
+      },
+
+      {
+          nom: "Tonnelier de Mer",
+          nomLatin: "Phronima sedentaria",
+          taille: "3 cm",
+          tailleRelative: "10vw",
+          profondeur: 1050,
+          anecdote: "A inspiré le monstre du film Alien selon plusieurs biologistes.",
+          position: "droite",
+          image: "images/icone/tonnelier.webm",
+          mediaClick: "images/tonnelier.mp4"
+      },
+
+      {
+          nom: "Requin Bleu",
+          nomLatin: "Prionace glauca",
+          taille: "4 m",
+          tailleRelative: "20vw",
+          profondeur: 1420,
+          anecdote: "Effectue des migrations de plusieurs milliers de kilomètres.",
+          position: "droite",
+          image: "images/icone/requinbleu.webm",
+          mediaClick: "images/requinbleu.webp"
+      },
+
+      {
+          nom: "Hippocampe Feuille de Dragon",
+          nomLatin: "Phycodurus eques",
+          taille: "40 cm",
+          tailleRelative: "10vw",
+          profondeur: 50,
+          anecdote: "Son camouflage est si efficace qu'il ressemble à une algue dérivante.",
+          position: "droite",
+          image: "images/icone/hippo.webm",
+          mediaClick: "images/hippocampe.mp4"
+      },
+
+
+      {
+          nom: "Narval",
+          nomLatin: "Monodon monoceros",
+          taille: "5.5 m",
+          tailleRelative: "22vw",
+          profondeur: 180,
+          anecdote: "La masse testiculaire du narval est proportionnelle à la longueur de sa corne",
+          position: "gauche",
+          image: "images/icone/narval.webm",
+          mediaClick: "images/beluga.webp"
+      },
+
+      {
+          nom: "Poisson Vipère",
+          nomLatin: "Chauliodus sloani",
+          taille: "35 cm",
+          tailleRelative: "14vw",
+          profondeur: 5000,
+          anecdote: "Ses dents sont trop longues pour tenir dans sa bouche.",
+          position: "milieu",
+          image: "images/icone/poissonvip.webm",
+          mediaClick: "images/poissonvipere.mp4"
+      },
+      {
+          nom: "Tortue de mer",
+          nomLatin: "Chelonia mydas",
+          taille: "1.5 m",
+          tailleRelative: "16vw",
+          profondeur: 1196,
+          anecdote: "1 individu sur 1000 parvient à l’âge adulte.",
+          position: "droite",
+          image: "images/icone/tortuem.webm",
+          mediaClick: "images/tortuem.webp"
+      },
+
+      {
+          nom: "Tortue Luth",
+          nomLatin: "Dermochelys coriacea",
+          taille: "2.2 m",
+          tailleRelative: "20vw",
+          profondeur: 1300,
+          anecdote: "La plus grande tortue du monde avec 2 mètres et 900 kg, la tortue luth plonge à plus de 1000 mètres pour chasser les méduses.",
+          position: "milieu-droite",
+          image: "images/icone/tortuel.webm",
+          mediaClick: "images/tortuel.webp"
+      },
+
+      {
+          nom: "Légine Australe",
+          nomLatin: "Dissostichus eleginoides",
+          taille: "2.3 m",
+          tailleRelative: "20vw",
+          profondeur: 3910,
+          anecdote: "Possède des protéines antigel dans son sang.",
+          position: "milieu-droite",
+          image: "images/icone/legine.webm",
+          mediaClick: "images/legine.webp"
+      },
+
+      {
+          nom: "Dinochelus",
+          nomLatin: "Dinochelus ausubeli",
+          taille: "30 cm",
+          tailleRelative: "20vw",
+          profondeur: 881,
+          anecdote: "Découvert seulement en 2007 malgré sa taille imposante.",
+          position: "gauche",
+          image: "images/icone/dinochelus.webm",
+          mediaClick: "images/Dinochelus.webp"
+      },
+
+      {
+          nom: "Chimère",
+          nomLatin: "Chimaera monstrosa",
+          taille: "1.5 m",
+          tailleRelative: "16vw",
+          profondeur: 2650,
+          anecdote: "Plus proches parentes des requins que des poissons osseux. Leur lignée existe depuis plus de 400 millions d'années.",
+          position: "milieu-gauche",
+          image: "images/icone/chimere.webm",
+          mediaClick: "images/chimere.mp4"
+      },
+
+      {
+          nom: "Cuboméduse d’Australie",
+          nomLatin: "Chironex fleckeri",
+          taille: "5 m",
+          tailleRelative: "16vw",
+          profondeur: 1460,
+          anecdote: "L’animal le plus venimeux au monde, son poison est si puissant qu’il ne vous laisse même pas le temps de regagner la plage avant de mourir !",
+          position: "milieu-droite",
+          image: "images/icone/chironex.webm",
+          mediaClick: "images/cuboméduse.webp"
+      },
+
+      {
+          nom: "Requin-Lézard",
+          nomLatin: "Chlamydoselachus anguineus",
+          taille: "2 m",
+          tailleRelative: "16vw",
+          profondeur: 1530,
+          anecdote: "Considéré comme un fossile vivant.",
+          position: "gauche",
+          image: "images/icone/requinlizard.webm",
+          mediaClick: "images/requinac.webp"
+      },
+
+      {
+          nom: "Mahi-Mahi",
+          nomLatin: "Chlamydoselachus anguineus",
+          taille: "2.1 m",
+          tailleRelative: "19vw",
+          profondeur: 85,
+          anecdote: "L'un des poissons à la croissance la plus rapide du monde.",
+          position: "gauche",
+          image: "images/icone/mahi.webm",
+          mediaClick: "images/mahi.webp"
+      },
+
+      {
+          nom: "Ange de Mer",
+          nomLatin: "Clione limacina",
+          taille: "5 cm",
+          tailleRelative: "16vw",
+          profondeur: 490,
+          anecdote: "Petit mollusque transparent surnommé ange de mer.",
+          position: "gauche",
+          image: "images/icone/ange.webm",
+          mediaClick: "images/ange.mp4"
+      },
+
+      {
+          nom: "Grand-Avaleur",
+          nomLatin: "Chiasmodon niger",
+          taille: "25 cm",
+          tailleRelative: "10vw",
+          profondeur: 2700,
+          anecdote: "Peut avaler une proie jusqu'à 10 fois sa masse et 2 fois sa longueur. Certains meurent après avoir été trop gourmands !",
+          position: "milieu-droite",
+          image: "images/icone/grandavaleur.webm",
+          mediaClick: "images/grandavaleur.webp"
+      },
+
+
+      {
+          nom: "Poisson-Lanterne",
+          nomLatin: "Melanocetus johnsonii",
+          taille: "15 cm",
+          tailleRelative: "12vw",
+          profondeur: 2500,
+          anecdote: "La femelle baudroie abyssale possède un leurre lumineux sur la tête rempli de bactéries bioluminescentes. Le mâle fusionne avec elle à vie.",
+          position: "milieu-gauche",
+          image: "images/icone/baudroie.webm",
+          mediaClick: "images/baudroie.mp4"
+      },
+      {
+          nom: "Nautile",
+          nomLatin: "Nautilus pompilius",
+          taille: "20 cm",
+          tailleRelative: "15vw",
+          profondeur: 600,
+          anecdote: "Cette espèce n'a quasiment pas évolué depuis plus de 400 millions d'années.",
+          position: "gauche",
+          image: "images/icone/nautile.webm",
+          mediaClick: "images/nautile.webp"
+      },
+
+      {
+          nom: "Eponge Harpe",
+          nomLatin: "Chondrocladia lyra",
+          taille: "50 cm",
+          tailleRelative: "13vw",
+          profondeur: 3500,
+          anecdote: "Éponge carnivore qui capture de petits crustacés.",
+          position: "milieu",
+          image: "images/icone/epongeh.webm",
+          mediaClick: "images/epongelire.mp4"
+      },
+
+      {
+          nom: "Grandgousier-pélican",
+          nomLatin: "Eurypharynx pelecanoides",
+          taille: "1 m",
+          tailleRelative: "20vw",
+          profondeur: 4070,
+          anecdote: "Sa bouche immense peut engloutir des proies plus grosses que lui.",
+          position: "gauche",
+          image: "images/icone/gulpereel.webm",
+          mediaClick: "images/grangousier.mp4"
+      },
+
+      {
+          nom: "Radiolaire",
+          nomLatin: "Radiolaria sp",
+          taille: "0.2 mm",
+          tailleRelative: "2vw",
+          profondeur: 439,
+          anecdote: "Les radiolaires sont des animaux microscopiques qui construisent des squelettes minéraux aux formes très esthétiques.",
+          position: "milieu",
+          image: "images/icone/radiolaria.webp",
+          mediaClick: "images/radiolaire.webp"
+      },
+
+
+      {
+          nom: "Régalec",
+          nomLatin: "Regalecus glesne",
+          taille: "11 m",
+          tailleRelative: "30vw",
+          profondeur: 958,
+          anecdote: "Plus long poisson osseux connu.",
+          position: "gauche",
+          image: "images/icone/regalec1.webm",
+          mediaClick: "images/regalec.webp"
+      },
+
+      {
+          nom: "Gigantactis",
+          nomLatin: "Gigantactis macronema",
+          taille: "40 cm",
+          tailleRelative: "15vw",
+          profondeur: 4900,
+          anecdote: "Possède un filament lumineux pouvant mesurer jusqu'à 5 fois la longueur de son corps, l'un des leurres les plus extravagants des abysses.",
+          position: "milieu-gauche",
+          image: "images/icone/gigantactis.webm",
+          mediaClick: "images/Gigantactis.webp"
+      },
+
+      {
+          nom: "Amphipode Géant",
+          nomLatin: "Alicella gigantea",
+          taille: "34 cm",
+          tailleRelative: "10vw",
+          profondeur: 7000,
+          anecdote: "Alors que ses cousins de surface font quelques millimètres, lui souffre de gigantisme des profondeurs.",
+          position: "gauche",
+          image: "images/icone/amphipode.webm",
+          mediaClick: "images/hadalamphipod.webp"
+      },
+
+      {
+          nom: "Ver Tubicole Géant",
+          nomLatin: "Riftia pachyptila",
+          taille: "2.4 cm",
+          tailleRelative: "12vw",
+          profondeur: 2570,
+          anecdote: "Ne possède ni bouche ni estomac ; des bactéries le nourrissent grâce à la chimiosynthèse.",
+          position: "droite",
+          image: "images/icone/vertubicole.webm",
+          mediaClick: "images/vertubicole.mp4"
+      },
+
+      {
+          nom: "Thon",
+          nomLatin: "Thunnus thynnus",
+          taille: "4.5 m",
+          tailleRelative: "22vw",
+          profondeur: 1100,
+          anecdote: "Maintient ses muscles plus chauds que l'eau environnante.",
+          position: "droite",
+          image: "images/icone/thon.webm",
+          mediaClick: "images/thon.webp"
+      },
+
+
+      {
+          nom: "Méduse Aurelia",
+          nomLatin: "Turritopsis dohrnii",
+          taille: "1 cm",
+          tailleRelative: "9vw",
+          profondeur: 191,
+          anecdote: "C'est l’un des rares cas connus d’animaux capables de revenir complètement à une phase sexuellement immature, faisant d’elle un animal biologiquement immortel.",
+          position: "droite",
+          image: "images/icone/meduseAUR.webm",
+          mediaClick: "images/medusei.webp"
+      },
+
+      {
+          nom: "Poisson Sans Visage",
+          nomLatin: "Typhlonus nasus",
+          taille: "50 cm",
+          tailleRelative: "23vw",
+          profondeur: 5180,
+          anecdote: "Sa bouche est presque invisible.",
+          position: "gauche",
+          image: "images/icone/faceless.webm",
+          mediaClick: "images/facelessfish.mp4"
+      },
+
+      {
+          nom: "Vampire des abysses",
+          nomLatin: "Vampyroteuthis infernalis",
+          taille: "30 cm",
+          tailleRelative: "23vw",
+          profondeur: 3195,
+          anecdote: "Son nom signifie calmar vampire de l'enfer. Il ne boit pourtant pas de sang.",
+          position: "milieu",
+          image: "images/icone/vampire.webm",
+          mediaClick: "images/Vampire.mp4"
+      },
+
+      {
+          nom: "Calmar Luciole",
+          nomLatin: "Watasenia scintillans",
+          taille: "8 cm",
+          tailleRelative: "23vw",
+          profondeur: 765,
+          anecdote: "Produit une lumière bleue spectaculaire grâce à des milliers de photophores.",
+          position: "milieu",
+          image: "images/icone/luciole.webm",
+          mediaClick: "images/CalmarLuciole.mp4"
+      },
+
+      {
+          nom: "Guillemot de Brünnich",
+          nomLatin: "Uria lomvia",
+          taille: "45 cm",
+          tailleRelative: "23vw",
+          profondeur: 219,
+          anecdote: "Oiseau plongeur capable d'aller plus profond que beaucoup de phoques.",
+          position: "milieu",
+          image: "images/icone/guillm.webm",
+          mediaClick: "images/guillemot.webp"
+      },
+
+
+      {
+          nom: "Dauphin",
+          nomLatin: "Tursiops truncatus",
+          taille: "4 m",
+          tailleRelative: "23vw",
+          profondeur: 20,
+          anecdote: "Certaines espèces de dauphins utilisent la toxine de poisson globe pour se droguer.",
+          position: "gauche",
+          image: "images/icone/dauphin.webm",
+          mediaClick: "images/dauphin.mp4"
+      },
+
+      {
+          nom: "Grande Rouge",
+          nomLatin: "Tiburonia granrojo",
+          taille: "1 m",
+          tailleRelative: "22vw",
+          profondeur: 1680,
+          anecdote: "Cette méduse géante rouge ne possède pas de longs tentacules comme la plupart des méduses. Elle n'a été découverte qu'en 2003.",
+          position: "droite",
+          image: "images/icone/tiburonia.webm",
+          mediaClick: "images/GrandeRouge.mp4"
+      },
+
+      {
+          nom: "Espadon-voilier",
+          nomLatin: "Stiophorus platypterus",
+          taille: "4.5 m",
+          tailleRelative: "32vw",
+          profondeur: 1870,
+          anecdote: "Poisson le plus rapide au monde, il peut atteindre des vitesses de pointes de l’ordre de 100 km/h.",
+          position: "milieu",
+          image: "images/icone/espadonV.webm",
+          mediaClick: "images/voilier.mp4"
+      },
+
+      {
+          nom: "Requin du Groenland",
+          nomLatin: "Somniosus microcephalus",
+          taille: "7 m",
+          tailleRelative: "25vw",
+          profondeur: 2160,
+          anecdote: "Vertébré ayant la plus grande longévité connue : plus de 400 ans. Maturité sexuelle à 150 ans !.",
+          position: "milieu",
+          image: "images/icone/requindugro.webm",
+          mediaClick: "images/requing.mp4"
+      },
+
+      {
+          nom: "Cochon de Mer",
+          nomLatin: "Scotoplanes globosa",
+          taille: "20 cm",
+          tailleRelative: "10vw",
+          profondeur: 6100,
+          anecdote: "Marche sur le fond marin grâce à des pattes gonflées d'eau.",
+          position: "milieu",
+          image: "images/icone/cochondemer.webm",
+          mediaClick: "images/cochondemer.mp4"
+      },
+
+      {
+          nom: "BlobFish",
+          nomLatin: "Psychrolutes marcidus",
+          taille: "30 cm",
+          tailleRelative: "10vw",
+          profondeur: 1130,
+          anecdote: "Son apparence gélatineuse n'est visible qu'en dehors de son habitat profond.",
+          position: "milieu",
+          image: "images/icone/blobfish.webm",
+          mediaClick: "images/blob.webp"
+      },
+
+      {
+          nom: "Poisson Trépied",
+          nomLatin: "Bathypterois grallator",
+          taille: "40 cm",
+          tailleRelative: "14vw",
+          profondeur: 5975,
+          anecdote: "Se tient debout sur trois rayons géants comme sur des échasses.",
+          position: "milieu",
+          image: "images/icone/poissontrepied.webm",
+          mediaClick: "images/poissontrepied.webp"
+      },
+
+      {
+          nom: "Bathymone Géant",
+          nomLatin: "Bathynomus giganteus",
+          taille: "35 cm",
+          tailleRelative: "9vw",
+          profondeur: 2100,
+          anecdote: "Dans les abysses, la nourriture est rare, cet isopode géant s’est adapté et peut se priver de nourriture pendant 5 ans !",
+          position: "gauche",
+          image: "images/icone/bathymone.webm",
+          mediaClick: "images/bathymone.webp"
+      },
+
+      {
+          nom: "Poissons Limaces des Mariannes",
+          nomLatin: "Pseudoliparis swirei",
+          taille: "10 cm",
+          tailleRelative: "14vw",
+          profondeur: 8100,
+          anecdote: "Animal vertébré observé le plus profondément sur Terre. Les chercheurs pensent qu'aucun poisson ne peut vivre beaucoup plus bas à cause de la pression.",
+          position: "milieu",
+          image: "images/icone/limacemaria.webm",
+          mediaClick: "images/limacemarianne.mp4"
+      }
+    ];
+
+
+        // ============================================================
+        // ECHELLE DE PROFONDEUR NON-UNIFORME (OBLIGATOIRE)
+        // ------------------------------------------------------------
+        // La zone épipélagique (0-200m) concentre énormément d'animaux
+        // (voir tableau `animaux` plus bas) : avec une échelle uniforme,
+        // ils se retrouvaient tous à l'écran en même temps pendant le
+        // scroll, ce qui lançait beaucoup de vidéos WebM simultanément
+        // (pic CPU). En dilatant cette zone (plus de pixels par mètre),
+        // les mêmes animaux sont étalés sur une plus grande distance de
+        // scroll : à un instant donné, moins d'entre eux sont visibles/
+        // en cours de décodage. Effet secondaire recherché et demandé :
+        // un même geste de scroll fait descendre BEAUCOUP moins vite en
+        // profondeur tant qu'on est dans les 200 premiers mètres.
+        // Au-delà de 200m, l'échelle redevient celle d'origine (14px/m).
+        // ============================================================
+        const PPM_NORMAL = 14;            // px par mètre au-delà de 200m (inchangé)
+        const EPI_DILATION_FACTOR = 6;    // x6 : palier "encore plus prononcé" demandé (précédemment x3)
+        const PPM_EPI = PPM_NORMAL * EPI_DILATION_FACTOR; // px par mètre entre 0 et 200m
+        const EPI_DEPTH_LIMIT = 200;       // m — bornes de la zone épipélagique
+        const EPI_PX_HEIGHT = EPI_DEPTH_LIMIT * PPM_EPI; // hauteur en px allouée à cette zone
+
+        // Convertit une profondeur (m) en position verticale (px) dans la page.
+        function depthToPx(depthMeters) {
+            if (depthMeters <= EPI_DEPTH_LIMIT) return depthMeters * PPM_EPI;
+            return EPI_PX_HEIGHT + (depthMeters - EPI_DEPTH_LIMIT) * PPM_NORMAL;
+        }
+        // Opération inverse : position verticale (px) -> profondeur (m).
+        function pxToDepth(px) {
+            if (px <= EPI_PX_HEIGHT) return px / PPM_EPI;
+            return EPI_DEPTH_LIMIT + (px - EPI_PX_HEIGHT) / PPM_NORMAL;
+        }
+
+        const MAX_DEPTH = 10924;
+
+        const container = document.getElementById('abyss-space');
+        const milestonesGroup = document.getElementById('milestones-group');
+        const zoneTxt = document.getElementById('zone-txt');
+        const floorElement = document.getElementById('ocean-floor');
+
+        // Calcul hauteur globale
+        const totalAbyssHeight = depthToPx(MAX_DEPTH);
+        // On fige la hauteur de la scène de surface et le point de départ de la zone
+        // profonde en pixels (une seule fois, au chargement) plutôt que de laisser deux
+        // éléments recalculer chacun 100vh en live : sur mobile, la barre d'adresse qui
+        // se réduit pendant le scroll peut recalculer 100vh à des instants légèrement
+        // différents selon l'élément, ce qui créait un écart (bande noire) entre la fin
+        // de la scène orange et le début du dégradé de profondeur.
+        const HERO_PIXEL_HEIGHT = window.innerHeight;
+        document.querySelector('.surface').style.height = `${HERO_PIXEL_HEIGHT}px`;
+
+        // Recharge uniquement lors d'un VRAI changement d'orientation (portrait <-> paysage) —
+        // CORRECTIF BUG : l'ancienne version comparait juste innerWidth avant/après, en
+        // ignorant les changements de hauteur seule (barre d'adresse mobile). Mais sur
+        // certains téléphones Android, cette même barre d'adresse qui apparaît/disparaît
+        // pendant le scroll peut aussi faire varier innerWidth de quelques pixels (pas
+        // seulement innerHeight) — ce qui déclenchait un rechargement en pleine page
+        // pendant un simple scroll (page qui "saute" au sommet puis se re-scrolle).
+        // Ce phénomène était absent sur PC/Firefox/Chrome et sur tablette (barre d'adresse
+        // moins souvent rétractable), d'où le bug qui semblait spécifique aux petits écrans.
+        // Le nouveau test : (1) se base sur l'ORIENTATION réelle de l'écran, pas sur une
+        // simple comparaison de largeur en pixels — un changement de barre d'adresse ne
+        // change jamais l'orientation ; (2) attend que la taille se stabilise (aucun
+        // nouvel évènement resize pendant 500ms) avant de vérifier, pour ignorer les
+        // évènements intermédiaires pendant l'animation d'apparition/disparition.
+        let lastIsPortrait = window.matchMedia('(orientation: portrait)').matches;
+        let resizeSettleTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeSettleTimer);
+            resizeSettleTimer = setTimeout(() => {
+                const isPortraitNow = window.matchMedia('(orientation: portrait)').matches;
+                if (isPortraitNow !== lastIsPortrait) {
+                    location.reload();
+                }
+            }, 500);
+        });
+
+        document.body.style.height = `${totalAbyssHeight + window.innerHeight + 500}px`;
+        floorElement.style.top = `${totalAbyssHeight}px`; // CORRIGÉ : Plus de double décalage de surface
+
+        // ============================================================
+        // CORRECTIF LUMINOSITÉ : positionnement du dégradé de profondeur
+        // ------------------------------------------------------------
+        // Les 4 segments assombrissants sont calés sur les VRAIES zones
+        // océaniques (mêmes seuils que le texte de zone affiché à l'écran :
+        // 200m / 1000m / 4000m) via depthToPx(), plutôt que sur des valeurs
+        // fixes en pixels. Ainsi, quelle que soit l'échelle de dilatation
+        // appliquée à la zone épipélagique, l'obscurité progresse toujours
+        // au bon rythme par rapport à la profondeur réelle.
+        // ============================================================
+        const oceanLightGlow = document.querySelector('.ocean-light-glow');
+        const glowSeg1 = document.querySelector('.glow-segment-1');
+        const glowSeg2 = document.querySelector('.glow-segment-2');
+        const glowSeg3 = document.querySelector('.glow-segment-3');
+        const glowSeg4 = document.querySelector('.glow-segment-4');
+
+        const glowDepth0 = 0;
+        const glowDepth200 = depthToPx(200);     // fin de la zone épipélagique (encore bien éclairée)
+        const glowDepth1000 = depthToPx(1000);    // fin de la zone mésopélagique ("crépusculaire" -> quasi nuit)
+        const glowDepth4000 = depthToPx(4000);    // fin de la zone bathypélagique (noir complet)
+        const glowDepthEnd = totalAbyssHeight;    // jusqu'au fond de la fosse (déjà noir depuis longtemps)
+
+        glowSeg1.style.top = `${glowDepth0}px`;
+        glowSeg1.style.height = `${glowDepth200 - glowDepth0}px`;
+
+        glowSeg2.style.top = `${glowDepth200}px`;
+        glowSeg2.style.height = `${glowDepth1000 - glowDepth200}px`;
+
+        glowSeg3.style.top = `${glowDepth1000}px`;
+        glowSeg3.style.height = `${glowDepth4000 - glowDepth1000}px`;
+
+        glowSeg4.style.top = `${glowDepth4000}px`;
+        glowSeg4.style.height = `${Math.max(0, glowDepthEnd - glowDepth4000)}px`;
+
+        oceanLightGlow.style.height = `${glowDepthEnd}px`;
+
+        // GENERATION DES ANIMAUX AVEC TAILLE CUSTOMISEE
+        const depthImageQueue = []; // {img, src, profondeur} — alimente le chargement progressif ci-dessous
+        // OPTIM CPU : lookup O(1) par élément carte plutôt qu'un .find() en O(n) (56 animaux)
+        // à chaque déclenchement des IntersectionObserver ci-dessous.
+        const depthImageQueueByCard = new Map();
+        animaux.forEach((animal) => {
+            const card = document.createElement('div');
+            card.className = `animal-card pos-${animal.position}`;
+            // CORRECTIF : la largeur n'est plus posée directement sur .animal-card
+            // (voir .animal-visual plus bas et les commentaires CSS associés).
+
+            const topPosition = depthToPx(animal.profondeur); // échelle non-uniforme (zone épipélagique dilatée)
+            card.style.top = `${topPosition}px`;
+
+            const randomDelay = (Math.random() * -5).toFixed(2);
+            card.style.animationDelay = `${randomDelay}s`;
+
+            // Si l'image est un .webm, on génère une <video> muette, en boucle et silencieuse.
+            // Pas besoin de vignette séparée : la marge de 200m laisse le temps à la
+            // première image de charger avant que l'animal n'arrive à l'écran.
+            const isWebm = animal.image.toLowerCase().endsWith('.webm');
+            const mediaTag = isWebm
+                ? `<video data-src="${animal.image}" class="depth-lazy-img" muted loop playsinline webkit-playsinline preload="auto"></video>`
+                : `<img data-src="${animal.image}" alt="${animal.nom}" class="depth-lazy-img">`;
+
+            // CORRECTIF : marge de respiration (padding/masque) proportionnelle à la taille
+            // de CHAQUE animal, plutôt qu'une valeur fixe de 40px. Pour un tout petit
+            // animal, 40px suffisaient largement ; mais pour un très grand élément
+            // (ex. "60vw"), 40px ne représentent presque rien à l'échelle de l'image : le
+            // masque commençait alors à s'estomper À L'INTÉRIEUR de l'image elle-même,
+            // au lieu de rester dans la marge — d'où la coupe encore visible sur le
+            // Titanic. En exprimant le padding dans la MÊME unité que tailleRelative
+            // (proportionnel, avec un plancher pour les tout petits animaux), la marge
+            // reste toujours une fraction cohérente de la taille réelle affichée.
+            const tailleMatch = animal.tailleRelative.match(/^([\d.]+)(\D+)$/);
+            const tailleNum = tailleMatch ? parseFloat(tailleMatch[1]) : 20;
+            const tailleUnit = tailleMatch ? tailleMatch[2] : 'vw';
+            const visualPadding = Math.max(3, tailleNum * 0.18);
+
+            card.innerHTML = `
+                <div class="animal-tooltip">${animal.anecdote}</div>
+                <div class="animal-visual" style="width:${animal.tailleRelative}; height:${animal.tailleRelative}; padding:${visualPadding}${tailleUnit}; margin:-${visualPadding}${tailleUnit};">${mediaTag}</div>
+                <div class="animal-name">${animal.nom}</div>
+                <div class="animal-latin">${animal.nomLatin}</div>
+                <div class="animal-size">Taille : ${animal.taille}</div>
+            `;
+
+            if (animal.mediaClick && animal.mediaClick.trim() !== "") {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPopup(animal.mediaClick);
+                });
+            }
+            container.appendChild(card);
+
+            const queueEntry = {
+                card: card,
+                img: card.querySelector('.depth-lazy-img'),
+                src: animal.image,
+                profondeur: animal.profondeur
+            };
+            depthImageQueue.push(queueEntry);
+            depthImageQueueByCard.set(card, queueEntry); // lookup O(1) pour les IntersectionObserver plus bas
+        });
+
+        // ============================================================
+        // ANIMAL VOLANT (albatros)
+        // ------------------------------------------------------------
+        // Ne fait pas partie du système de profondeur (pas de defilement
+        // vertical) : reutilise juste les memes briques visuelles que les
+        // autres animaux (tooltip d'anecdote, clic -> mediaClick), avec
+        // sa propre traversee horizontale geree entierement en CSS (les
+        // images-clés sont générées dynamiquement juste en dessous, à
+        // partir des 3 réglages ci-après). Les deux animaux ne sont
+        // jamais visibles en meme temps : l'alternance vient uniquement
+        // du minutage des keyframes, aucun minuteur JS necessaire.
+        // ============================================================
+
+        // ============================================================
+        // RÉGLAGES FACILES À MODIFIER — taille et vitesse des animaux volants
+        // ============================================================
+        const FLYING_ANIMAL_SIZE_PX = 290;  // taille à l'écran (en pixels) — augmentez pour un animal plus grand
+        const FLYING_CROSS_SECONDS = 4;     // temps pour traverser l'écran de gauche à droite (secondes) — diminuez pour aller plus vite
+        const FLYING_GAP_SECONDS = 3;       // temps d'invisibilité entre deux passages du MÊME animal (secondes)
+
+        const animauxVolants = [
+            {
+                nom: "Albatros",
+                nomLatin: "Diomedea exulans",
+                anecdote: "Plus grand oiseau du monde, l'albatros peut planer des heures durant sans un seul battement d'aile, porté par les courants d'air au-dessus des vagues.",
+                image: "images/icone/albatros.webm",
+                mediaClick: "images/albatros1.webp",
+                classe: "flying-card-albatros",
+                startDelay: 0 // sa traversée commence dès le début du cycle
+            }
+        ];
+
+        // Calcule les images-clés à partir des réglages ci-dessus, puis les injecte
+        // dans une balise <style> : une fois posée, l'animation reste du pur CSS
+        // (aucun coût JS en continu) — seul ce calcul initial dépend des réglages.
+        // Cycle simple à un seul animal : traversée, puis pause, puis ça recommence.
+        const flyTotalCycle = FLYING_CROSS_SECONDS + FLYING_GAP_SECONDS;
+        const flyPctCrossA = (FLYING_CROSS_SECONDS / flyTotalCycle * 100).toFixed(3);
+        const flyingStyleTag = document.createElement('style');
+        flyingStyleTag.textContent = `
+            @keyframes flyTurnA {
+                0% { transform: translateX(-20vw); }
+                ${flyPctCrossA}% { transform: translateX(120vw); }
+                100% { transform: translateX(120vw); }
+            }
+            .flying-card-albatros { animation: flyTurnA ${flyTotalCycle}s linear infinite; }
+        `;
+        document.head.appendChild(flyingStyleTag);
+
+        const flyingContainer = document.getElementById('flying-animals-container');
+        const flyingVideos = [];
+
+        animauxVolants.forEach((animal) => {
+            const card = document.createElement('div');
+            // Réutilise .animal-card pour hériter gratuitement du centrage flex et du
+            // comportement de survol du tooltip (.animal-card:hover .animal-tooltip).
+            card.className = `animal-card flying-card ${animal.classe}`;
+
+            card.innerHTML = `
+                <div class="animal-tooltip">${animal.anecdote}</div>
+                <div class="animal-visual" style="width:${FLYING_ANIMAL_SIZE_PX}px; height:${FLYING_ANIMAL_SIZE_PX}px; padding:${Math.round(FLYING_ANIMAL_SIZE_PX*0.2)}px; margin:-${Math.round(FLYING_ANIMAL_SIZE_PX*0.2)}px;">
+                    <video src="${animal.image}" class="flying-visual" muted loop autoplay playsinline webkit-playsinline></video>
+                </div>
+            `;
+
+            if (animal.mediaClick && animal.mediaClick.trim() !== "") {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPopup(animal.mediaClick);
+                });
+            }
+
+            flyingContainer.appendChild(card);
+            const video = card.querySelector('.flying-visual');
+            if (video) {
+                flyingVideos.push(video);
+                // CORRECTIF : sans ceci, la vidéo restait invisible pour toujours
+                // (opacity:0 par défaut — voir la règle .animal-card video plus haut,
+                // qui ne passe à opacity:1 qu'une fois la classe .loaded ajoutée). Les
+                // animaux classiques la reçoivent via le système de chargement
+                // progressif ; celui-ci étant plus simple (pas de lazy-load), on
+                // l'ajoute directement dès que la vidéo a une première image prête.
+                video.addEventListener('loadeddata', () => {
+                    video.classList.add('loaded');
+                }, { once: true });
+
+                // SYNCHRO VIDÉO/TRAJET : la vidéo tournait auparavant en boucle en
+                // continu, y compris pendant que l'animal est hors champ (pause entre
+                // deux traversées) — inutile, personne ne la voit à ce moment-là. Ce
+                // minuteur fait donc deux choses en alternance : (1) remet la vidéo à
+                // l'image 0 et la relance pile au moment où la traversée commence (pour
+                // que le mouvement colle au trajet, sans saut), et (2) la met en pause
+                // dès que l'animal sort de l'écran, jusqu'à la traversée suivante. Un
+                // simple minuteur, sans coût notable puisqu'il ne se déclenche que
+                // quelques fois par minute.
+                // "inCrossingPhase" indique si l'animal est censé être visible/en vol
+                // en ce moment — utilisé par l'observateur de section plus bas pour ne
+                // jamais relancer la vidéo à un mauvais moment (ex. si on revient sur la
+                // section pendant que l'animal est censé être en pause hors champ).
+                video.dataset.inCrossingPhase = 'true';
+                const crossMs = FLYING_CROSS_SECONDS * 1000;
+                const gapMs = FLYING_GAP_SECONDS * 1000;
+                let restartTimer = null;
+                let restartTargetTime = null; // horodatage (performance.now()) du prochain évènement prévu
+                let restartPausedAt = null;
+                let nextPhase = 'cross'; // alterne : 'cross' (relance) puis 'gap' (pause)
+                function scheduleNext(delay) {
+                    restartTargetTime = performance.now() + delay;
+                    restartTimer = setTimeout(() => {
+                        if (nextPhase === 'cross') {
+                            video.currentTime = 0;
+                            video.dataset.inCrossingPhase = 'true';
+                            video.play().catch(() => {});
+                            nextPhase = 'gap';
+                            scheduleNext(crossMs);
+                        } else {
+                            video.dataset.inCrossingPhase = 'false';
+                            video.pause(); // hors champ : plus la peine de décoder pour rien
+                            nextPhase = 'cross';
+                            scheduleNext(gapMs);
+                        }
+                    }, delay);
+                }
+                scheduleNext(animal.startDelay * 1000);
+
+                // SURVOL : fige complètement l'animal (trajet + vidéo) le temps de lire
+                // l'anecdote — sinon le passage est trop rapide pour avoir le temps de
+                // la lire. Tout reprend exactement là où c'était resté à la sortie du
+                // survol, minuteur de synchronisation inclus. (Le survol ne peut de
+                // toute façon se produire que pendant la phase visible, l'animal étant
+                // hors écran — donc hors de portée de la souris — pendant sa pause.)
+                card.addEventListener('mouseenter', () => {
+                    card.style.animationPlayState = 'paused';
+                    video.style.animationPlayState = 'paused'; // le léger balancement de la vidéo elle-même
+                    video.pause();
+                    if (restartTimer) {
+                        clearTimeout(restartTimer);
+                        restartTimer = null;
+                        restartPausedAt = performance.now();
+                    }
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.animationPlayState = 'running';
+                    video.style.animationPlayState = 'running';
+                    video.play().catch(() => {});
+                    if (restartPausedAt !== null && restartTargetTime !== null) {
+                        const remaining = Math.max(0, restartTargetTime - restartPausedAt);
+                        scheduleNext(remaining);
+                        restartPausedAt = null;
+                    }
+                });
+
+                // DIAGNOSTIC (permanent, coût nul en fonctionnement normal) : si le
+                // fichier vidéo ne charge pas, affiche directement sur la page le
+                // chemin exact recherché, plutôt qu'un échec invisible qu'on ne peut
+                // repérer que dans la console du navigateur.
+                video.addEventListener('error', () => {
+                    const errLabel = document.createElement('div');
+                    errLabel.textContent = `⚠️ Vidéo introuvable : ${animal.image}`;
+                    errLabel.style.cssText = 'position:absolute; top:-28px; left:50%; transform:translateX(-50%); background:#b91c1c; color:#fff; font-size:11px; padding:4px 8px; white-space:nowrap; border-radius:4px; z-index:100; font-family:sans-serif;';
+                    card.appendChild(errLabel);
+                    console.error(`[animal volant] échec de chargement : ${animal.image}`);
+                }, { once: true });
+            }
+        });
+
+        // OPTIM CPU : une fois la section de surface quittée (l'utilisateur a commencé
+        // sa descente et n'y reviendra presque jamais), plus besoin de faire tourner le
+        // décodage de cette petite vidéo en boucle indéfiniment.
+        const surfaceSectionEl = document.querySelector('.surface');
+        if (surfaceSectionEl && flyingVideos.length) {
+            const surfaceVisibilityObserver = new IntersectionObserver((entries) => {
+                entries.forEach((obs) => {
+                    flyingVideos.forEach((v) => {
+                        if (obs.isIntersecting) {
+                            // Ne relance que si l'animal est censé être en vol à cet
+                            // instant — sinon on le relancerait par erreur pendant sa
+                            // pause hors champ (voir minuteur plus haut).
+                            if (v.dataset.inCrossingPhase !== 'false') v.play().catch(() => {});
+                        } else {
+                            v.pause();
+                        }
+                    });
+                });
+            }, { threshold: 0 });
+            surfaceVisibilityObserver.observe(surfaceSectionEl);
+        }
+
+        // ============================================================
+        // GESTION DES MÉDIAS À GRANDE ÉCHELLE (jusqu'à ~100 animaux)
+        // ------------------------------------------------------------
+        // Avec autant d'animaux (et certains en .webm, plus lourds qu'une
+        // image), on ne peut plus se permettre de tout charger d'avance,
+        // même progressivement. La stratégie retenue repose sur deux
+        // marges concentriques, toutes deux basées sur la distance RÉELLE
+        // à l'écran (via IntersectionObserver, peu coûteux pour le
+        // navigateur, plutôt que recalculée à la main à chaque scroll) :
+        //
+        //  - Marge large (~200m) : au-delà, le média n'est PAS chargé, ou
+        //    est déchargé s'il l'était déjà (source vidée, mémoire libérée).
+        //    En dessous, le fichier réel (.webm/.png/.webp) commence à charger.
+        //  - Marge étroite (quelques centaines de px) : contrôle uniquement
+        //    la LECTURE des vidéos. Une vidéo peut être chargée (donc prête,
+        //    poster ou première frame visible) sans être en train de jouer :
+        //    elle ne se met en lecture que juste avant d'arriver à l'écran,
+        //    et se met en pause dès qu'elle en ressort — jamais plusieurs
+        //    vidéos ne jouent en même temps loin les unes des autres.
+        //
+        // Le poster (vignette statique légère, même nom de fichier en .jpg)
+        // s'affiche instantanément pour chaque animal, qu'il soit chargé ou
+        // non : il n'y a donc jamais de trou visuel, même en scroll rapide.
+        // ============================================================
+        const startedSrcs = new Set();
+
+        function preloadAndSwap(entry, onDone) {
+            if (startedSrcs.has(entry.src)) { if (onDone) onDone(); return; }
+            startedSrcs.add(entry.src);
+
+            const isWebm = entry.src.toLowerCase().endsWith('.webm');
+
+            if (isWebm) {
+                const video = entry.img;
+                const onReady = () => {
+                    video.classList.add('loaded');
+                    video.muted = true;
+                    // Ne se met en lecture que si on est déjà dans la marge étroite
+                    // (sinon elle reste chargée, prête, mais en pause sur sa 1ère image).
+                    if (video.dataset.shouldPlay === 'true') {
+                        video.play().catch(() => {});
+                    }
+                    video.removeEventListener('loadeddata', onReady);
+                    video._pendingLoadedDataHandler = null;
+                    if (onDone) onDone();
+                };
+                // OPTIM (point 8) : mémorise la référence sur l'élément lui-même, pour que
+                // unloadMedia() puisse la retirer proprement si le chargement est
+                // interrompu avant d'aboutir (sinon, lors d'allers-retours rapides en
+                // scroll, des écouteurs 'loadeddata' jamais déclenchés ni retirés
+                // s'accumulaient lentement sur la même vidéo).
+                video._pendingLoadedDataHandler = onReady;
+                video.addEventListener('loadeddata', onReady);
+                video.addEventListener('error', () => { if (onDone) onDone(); }, { once: true });
+                video.src = entry.src;
+                video.load();
+                return;
+            }
+
+            const preloader = new Image();
+            preloader.onload = () => {
+                entry.img.src = entry.src;
+                entry.img.classList.add('loaded');
+                if (onDone) onDone();
+            };
+            preloader.onerror = () => { entry.img.src = entry.src; if (onDone) onDone(); };
+            preloader.src = entry.src;
+        }
+
+        // Décharge complètement un média (vide la source, force la libération
+        // mémoire côté navigateur) et permet un rechargement futur si l'utilisateur revient.
+        function unloadMedia(entry) {
+            const el = entry.img;
+            // OPTIM CPU (point 6) : coupe l'animation CSS de nage tant que l'animal est
+            // hors de la marge pertinente — que son média ait déjà été chargé ou non (les
+            // animaux jamais approchés doivent eux aussi rester "éteints" dès le départ).
+            // Il était de toute façon invisible (content-visibility), mais l'animation
+            // continuait sinon de "tourner dans le vide" (recalcul de style à chaque
+            // frame). Relancée dans loadObserver dès que l'animal redevient pertinent
+            // (même marge que le chargement du média).
+            el.style.animationPlayState = 'paused';
+
+            if (!startedSrcs.has(entry.src)) return; // jamais chargé : rien d'autre à faire
+            if (el.tagName === 'VIDEO') {
+                // OPTIM (point 8) : retire l'écouteur 'loadeddata' resté en attente si le
+                // chargement est interrompu avant d'avoir abouti (voir preloadAndSwap).
+                if (el._pendingLoadedDataHandler) {
+                    el.removeEventListener('loadeddata', el._pendingLoadedDataHandler);
+                    el._pendingLoadedDataHandler = null;
+                }
+                el.pause();
+                el.removeAttribute('src');
+                el.load(); // force le navigateur à relâcher les ressources de décodage
+                el.dataset.shouldPlay = 'false';
+            } else {
+                el.removeAttribute('src');
+            }
+            el.classList.remove('loaded');
+            startedSrcs.delete(entry.src);
+        }
+
+        // --- Marge large (~200m) : charge / décharge selon la distance réelle à l'écran ---
+        const METERS_UNLOAD_MARGIN = 200;
+        const UNLOAD_MARGIN_PX = METERS_UNLOAD_MARGIN * PPM_NORMAL;
+
+        const loadObserver = new IntersectionObserver((entries) => {
+            entries.forEach((obs) => {
+                const entry = depthImageQueueByCard.get(obs.target);
+                if (!entry) return;
+                if (obs.isIntersecting) {
+                    // OPTIM CPU (point 6) : relance l'animation de nage (voir pause dans
+                    // unloadMedia ci-dessus) — même marge que le chargement du média, donc
+                    // aucune différence visible : l'animal était de toute façon invisible.
+                    entry.img.style.animationPlayState = 'running';
+                    preloadAndSwap(entry, null);
+                } else {
+                    unloadMedia(entry);
+                }
+            });
+        }, { rootMargin: `${UNLOAD_MARGIN_PX}px 0px ${UNLOAD_MARGIN_PX}px 0px` });
+
+        // --- Marge étroite : contrôle la lecture/pause des vidéos uniquement ---
+        // OPTIM CPU : réduite de 400 à 200px pour restreindre la fenêtre où plusieurs
+        // vidéos peuvent jouer simultanément hors champ. Calibrage prudent : à ce stade,
+        // la vidéo est déjà entièrement chargée (via la marge bien plus large de 2800px
+        // ci-dessus), donc .play() démarre quasi instantanément — ce n'est pas un délai
+        // de chargement qu'on raccourcit, juste la fenêtre de lecture "en avance". 200px
+        // laisse encore une marge confortable (environ un quart d'écran) pour que la
+        // vidéo soit déjà en mouvement au moment où elle devient visible, sans à-coup.
+        const PLAY_MARGIN_PX = 200;
+
+        const playObserver = new IntersectionObserver((entries) => {
+            entries.forEach((obs) => {
+                const entry = depthImageQueueByCard.get(obs.target);
+                if (!entry || entry.img.tagName !== 'VIDEO') return;
+                const video = entry.img;
+                if (obs.isIntersecting) {
+                    video.dataset.shouldPlay = 'true';
+                    // OPTIM CPU (point 5) : si une popup mediaClick est ouverte, on ne
+                    // lance pas de nouvelle vidéo d'arrière-plan — le drapeau shouldPlay
+                    // reste posé, et resumeBackgroundVideos() (appelée à la fermeture de
+                    // la popup) s'en chargera à ce moment-là.
+                    if (!isMediaOpen && video.readyState >= 2) video.play().catch(() => {});
+                } else {
+                    video.dataset.shouldPlay = 'false';
+                    video.pause();
+                }
+            });
+        }, { rootMargin: `${PLAY_MARGIN_PX}px 0px ${PLAY_MARGIN_PX}px 0px` });
+
+        depthImageQueue.forEach(entry => {
+            loadObserver.observe(entry.card);
+            if (entry.img.tagName === 'VIDEO') playObserver.observe(entry.card);
+        });
+
+        // GENERATION DES PALIERS TEXTUELS DANS LES ABYSSES
+        paliersInfo.forEach((palier) => {
+            const block = document.createElement('div');
+            block.className = 'depth-milestone';
+
+            const milestoneTop = depthToPx(palier.profondeur); // échelle non-uniforme (zone épipélagique dilatée)
+            block.style.top = `${milestoneTop}px`;
+
+            block.innerHTML = `
+                <div class="milestone-title">${palier.titre}</div>
+                <div class="milestone-desc">${palier.description}</div>
+            `;
+            milestonesGroup.appendChild(block);
+        });
+
+        // ============================================================
+        // 5. REGLE VERTICALE DE PROFONDEUR — génération du pool de graduations
+        // ============================================================
+        const depthRuler = document.getElementById('depth-ruler');
+        const rulerTrack = document.getElementById('ruler-track');
+        const RULER_POOL_SIZE = 240;  // Nombre de graduations gérées en permanence (recyclées) — règle pleine hauteur
+        const RULER_MINOR_STEP = 2;   // Mètres entre 2 graduations mineures
+        const RULER_MAJOR_EVERY = 5;  // 1 graduation majeure toutes les 5 (donc tous les 10m)
+        const RULER_SCALE = 5;        // Pixels par mètre sur la règle
+        const rulerTicks = [];
+
+        for (let i = 0; i < RULER_POOL_SIZE; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'ruler-tick';
+            const label = document.createElement('span');
+            label.className = 'ruler-label';
+            tick.appendChild(label);
+            rulerTrack.appendChild(tick);
+            rulerTicks.push({ el: tick, labelEl: label });
+        }
+
+        function updateRuler(depth) {
+            const halfCount = RULER_POOL_SIZE / 2;
+            const baseIndex = Math.round(depth / RULER_MINOR_STEP);
+            const windowHalf = (depthRuler.clientHeight || 300) / 2;
+            const fadeStart = windowHalf - 10;
+            const fadeEnd = fadeStart + 20; // au-delà, l'opacité est de toute façon clampée à 0
+
+            for (let i = 0; i < RULER_POOL_SIZE; i++) {
+                const tickIndex = baseIndex - halfCount + i;
+                const tickDepth = tickIndex * RULER_MINOR_STEP;
+                const entry = rulerTicks[i];
+
+                if (tickDepth < 0) {
+                    if (entry.lastOpacity !== 0) {
+                        entry.el.style.opacity = 0;
+                        entry.lastOpacity = 0;
+                    }
+                    continue;
+                }
+
+                const offset = (tickDepth - depth) * RULER_SCALE;
+                const dist = Math.abs(offset);
+
+                // OPTIM CPU : la grande majorité des 240 graduations se trouve hors de la
+                // petite fenêtre visible de la règle à un instant donné (~40-50 visibles au
+                // maximum). Au-delà de la zone de fondu, une graduation est garantie
+                // invisible : inutile de recalculer sa position/son texte tant qu'elle le
+                // reste — seul le passage visible ↔ invisible déclenche une écriture.
+                if (dist > fadeEnd) {
+                    if (entry.lastOpacity !== 0) {
+                        entry.el.style.opacity = 0;
+                        entry.lastOpacity = 0;
+                    }
+                    continue;
+                }
+
+                entry.el.style.transform = `translateY(calc(-50% + ${offset}px))`;
+
+                const isMajor = (tickIndex % RULER_MAJOR_EVERY === 0);
+                if (entry.lastMajor !== isMajor) {
+                    entry.el.classList.toggle('major', isMajor);
+                    entry.lastMajor = isMajor;
+                }
+                const labelText = isMajor ? `${tickDepth}m` : '';
+                if (entry.lastLabel !== labelText) {
+                    entry.labelEl.textContent = labelText;
+                    entry.lastLabel = labelText;
+                }
+
+                const opacity = dist > fadeStart ? Math.max(0, 1 - (dist - fadeStart) / 20) : 1;
+                if (entry.lastOpacity !== opacity) {
+                    entry.el.style.opacity = opacity;
+                    entry.lastOpacity = opacity;
+                }
+            }
+        }
+        updateRuler(0);
+
+        // --- ENGIN DE PILOTAGE DU SOUS-MARIN ENCAPSULÉ DANS LE VIEWPORT ---
+        const subPilot = document.getElementById('sub-pilot-container');
+        const subImage = document.querySelector('.sub-image');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let isAudioUnlocked = false;
+        let isMediaOpen = false; // bascule à l'ouverture/fermeture d'une popup média
+        let currentDepthGlobal = 0;
+
+        // OPTIM CPU : le mousemove peut se déclencher beaucoup plus souvent qu'une
+        // frame d'affichage (souris haute fréquence). Le listener ne fait plus AUCUN
+        // calcul ni écriture DOM : il se contente de mémoriser la position et de lever
+        // un drapeau, consommé une seule fois par frame dans mainLoop() ci-dessous.
+        let mouseDirty = false;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            mouseDirty = true;
+            if (!isAudioUnlocked) { unlockAudio(); }
+        }, { passive: true });
+
+        // Repositionne le sous-marin + son viseur. Utilise exclusivement `transform`
+        // (translate3d) au lieu de left/top : ces écritures restent sur le compositeur
+        // GPU et ne déclenchent plus de reflow à chaque déplacement de souris.
+        function updateSubmarinePosition() {
+            subPilot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+
+            const isMobile = window.innerWidth <= 768;
+            const subWidth = isMobile ? 135 : 210;
+            const subHeight = isMobile ? 75 : 120;
+            const offsetLeft = isMobile ? 15 : 25;
+            const offsetTop = isMobile ? 15 : 20;
+
+            let targetSubLeft = mouseX + offsetLeft;
+            let targetSubTop = mouseY + offsetTop;
+
+            if (targetSubLeft < 0) targetSubLeft = 0;
+            if (targetSubLeft > window.innerWidth - subWidth) targetSubLeft = window.innerWidth - subWidth;
+            if (targetSubTop < 0) targetSubTop = 0;
+            if (targetSubTop > window.innerHeight - subHeight) targetSubTop = window.innerHeight - subHeight;
+
+            subImage.style.transform = `translate3d(${targetSubLeft - mouseX}px, ${targetSubTop - mouseY}px, 0)`;
+        }
+        updateSubmarinePosition(); // position initiale, avant le premier mousemove
+
+        // Point 4 : accumulateur de temps pour la chute continue de la neige marine
+        let snowTimeOffset = 0;
+        let snowCurrentlyVisible = false; // évite de réécrire opacity:0 en boucle une fois masquée
+        const snowLayerBack = document.getElementById('snow-back');
+        const snowLayerMid = document.getElementById('snow-mid');
+        const snowLayerFront = document.getElementById('snow-front');
+        const snowFillBack = document.getElementById('snow-back-fill');
+        const snowFillMid = document.getElementById('snow-mid-fill');
+        const snowFillFront = document.getElementById('snow-front-fill');
+        // Ramène une valeur dans [0, tileSize) — la neige défile visuellement à l'identique
+        // (le motif est répétitif) mais la valeur de transform reste bornée, ce qui garantit
+        // que le calque surdimensionné (voir CSS) couvre toujours tout l'écran.
+        const wrapTile = (v, t) => ((v % t) + t) % t;
+
+        // ============================================================
+        // BOUCLE PRINCIPALE UNIQUE — remplace l'ancien duo
+        // "listener 'scroll'" + "boucle RAF indépendante".
+        // Tout le travail par frame (position du sous-marin, profondeur,
+        // règle, zone, sédiments, neige) est regroupé ici. Chaque étape
+        // ne réécrit le DOM QUE si la valeur a réellement changé depuis
+        // la frame précédente, ce qui évite l'essentiel des recalculs
+        // de style/layout inutiles pendant un scroll rapide.
+        // ============================================================
+        let lastRenderedDepth = -1;
+        let lastZoneLabel = '';
+        let lastSubmerged = false;
+        let snowFrameParity = 0; // ~30fps pour la neige au lieu de 60fps (mouvement lent, imperceptible)
+
+        // OPTIM CPU (point 7) : coupe tout (boucle principale + vidéos en lecture) dès
+        // que l'onglet n'est plus affiché — sinon le décodage vidéo et les recalculs de
+        // style continuaient en arrière-plan, invisibles, pour rien. Tout reprend
+        // exactement là où c'était resté dès le retour sur l'onglet.
+        let rafRunning = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                rafRunning = false; // mainLoop() ne se replanifie plus (voir sa fin)
+                pauseBackgroundVideos(); // même fonction que pour les popups (point 5)
+            } else {
+                if (!rafRunning) {
+                    rafRunning = true;
+                    requestAnimationFrame(mainLoop);
+                }
+                if (!isMediaOpen) resumeBackgroundVideos(); // ne relance pas si une popup était ouverte entretemps
+            }
+        });
+
+        function mainLoop() {
+            // --- 1. Sous-marin (uniquement si la souris a bougé depuis la dernière frame) ---
+            if (mouseDirty) {
+                mouseDirty = false;
+                updateSubmarinePosition();
+            }
+
+            // --- 2. Profondeur / règle / zone / sédiments, dérivés du scroll ---
+            const scrollTop = window.scrollY;
+            const surfaceHeight = HERO_PIXEL_HEIGHT;
+
+            const submerged = scrollTop > surfaceHeight * 0.1;
+            if (submerged !== lastSubmerged) {
+                lastSubmerged = submerged;
+                document.body.classList.toggle('submerged', submerged);
+            }
+
+            const lineOffset = window.innerHeight / 2;
+            // CORRECTIF : alignée sur la nouvelle hauteur de la zone de vagues (190px,
+            // contre 130px avant l'agrandissement des vagues) pour que le repère "0m"
+            // de la règle de profondeur reste calé sur le début visuel réel de l'eau.
+            // CORRECTIF : alignée sur la nouvelle hauteur de la zone de vagues (340px,
+            // agrandie pour corriger l'effet "plat") pour que le repère "0m" de la règle
+            // de profondeur reste calé sur le début visuel réel de l'eau.
+            // CORRECTIF : alignée sur la hauteur actuelle de la zone de vague (150px)
+            // pour que le repère "0m" de la règle de profondeur reste calé sur le début
+            // visuel réel de l'eau.
+            const WATER_VISUAL_START = surfaceHeight - 150;
+
+            let currentDepth = 0;
+            if (scrollTop + lineOffset > WATER_VISUAL_START) {
+                currentDepth = Math.floor(pxToDepth(scrollTop + lineOffset - WATER_VISUAL_START));
+            }
+            if (currentDepth > MAX_DEPTH) currentDepth = MAX_DEPTH;
+            currentDepthGlobal = currentDepth;
+
+            if (currentDepth !== lastRenderedDepth) {
+                lastRenderedDepth = currentDepth;
+                updateRuler(currentDepth);
+
+                let zoneLabel;
+                if (currentDepth < 200) zoneLabel = "Zone Épipélagique (0m - 200m)";
+                else if (currentDepth < 1000) zoneLabel = "Zone Mésopélagique (200m - 1000m)";
+                else if (currentDepth < 4000) zoneLabel = "Zone Bathypélagique (1000m - 4000m)";
+                else if (currentDepth < 6000) zoneLabel = "Zone Abyssopélagique (4000m - 6000m)";
+                else zoneLabel = "Zone Hadopélagique (6000m - Fosse)";
+
+                if (zoneLabel !== lastZoneLabel) {
+                    lastZoneLabel = zoneLabel;
+                    zoneTxt.textContent = zoneLabel;
+                }
+
+                checkSedimentTrigger();
+            }
+
+            // --- 3. Neige marine sur 3 plans (parallaxe), throttlée à ~30fps ---
+            // Le premier plan bouge plus vite que le second, et le second plus vite
+            // que le troisième. Le fondu d'opacité + le décalage de fond ne sont
+            // recalculés qu'une frame sur deux : mouvement lent, la différence
+            // visuelle avec 60fps est imperceptible, mais le coût de repaint est
+            // divisé par deux.
+            snowFrameParity ^= 1;
+            if (snowFrameParity === 0) {
+                snowTimeOffset += 2; // compense le fait qu'on ne joue qu'une frame sur deux
+                const snowIntensity = Math.max(0, Math.min(1, (currentDepthGlobal - 1000) / 150));
+                if (snowIntensity > 0) {
+                    const sY = scrollTop;
+                    snowLayerBack.style.opacity = (snowIntensity * 0.5).toFixed(2);
+                    snowLayerMid.style.opacity = (snowIntensity * 0.75).toFixed(2);
+                    snowLayerFront.style.opacity = snowIntensity.toFixed(2);
+
+                    // Signe inversé : le sous-marin descend plus vite que la neige ne coule,
+                    // donc relativement à la caméra, la neige semble REMONTER quand on descend
+                    // (et inversement quand on remonte) — comme sur neal.fun/deep-sea.
+                    // OPTIM CPU : transform au lieu de backgroundPosition — voir commentaire CSS.
+                    snowFillBack.style.transform  = `translate3d(0, ${wrapTile(-sY * 0.05 + snowTimeOffset * 0.15, 320).toFixed(1)}px, 0)`;
+                    snowFillMid.style.transform   = `translate3d(0, ${wrapTile(-sY * 0.12 + snowTimeOffset * 0.30, 360).toFixed(1)}px, 0)`;
+                    snowFillFront.style.transform = `translate3d(0, ${wrapTile(-sY * 0.22 + snowTimeOffset * 0.55, 400).toFixed(1)}px, 0)`;
+                    snowCurrentlyVisible = true;
+                } else if (snowCurrentlyVisible) {
+                    snowLayerBack.style.opacity = 0;
+                    snowLayerMid.style.opacity = 0;
+                    snowLayerFront.style.opacity = 0;
+                    snowCurrentlyVisible = false;
+                }
+            }
+
+            if (rafRunning) requestAnimationFrame(mainLoop);
+        }
+        requestAnimationFrame(mainLoop);
+
+        // --- CONTROLE DU SYSTEME AUDIO ET DE LA CAPSULE DE VOLUMES ---
+        const bgMusic = document.getElementById('bg-music');
+        const volSlider = document.getElementById('vol-slider');
+        const volFill = document.getElementById('vol-fill');
+        const muteBtn = document.getElementById('mute-btn');
+        let currentVolume = 0.6;
+        let isMuted = false;
+
+        function setVolume(volumeFactor) {
+            currentVolume = Math.max(0, Math.min(1, volumeFactor));
+            if(!isMuted) {
+                bgMusic.volume = currentVolume;
+            }
+            volFill.style.height = `${currentVolume * 100}%`;
+        }
+        setVolume(currentVolume);
+
+        function handleVolumeDrag(e) {
+            const rect = volSlider.getBoundingClientRect();
+            const clickYFromBottom = rect.bottom - e.clientY;
+            const newVol = clickYFromBottom / rect.height;
+            if(isMuted) toggleMute();
+            setVolume(newVol);
+        }
+
+        let isDraggingVol = false;
+        volSlider.addEventListener('mousedown', (e) => {
+            isDraggingVol = true;
+            handleVolumeDrag(e);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(isDraggingVol) handleVolumeDrag(e);
+        }, { passive: true });
+        window.addEventListener('mouseup', () => { isDraggingVol = false; });
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (isMuted) {
+                bgMusic.volume = 0;
+                muteBtn.style.color = '#ef4444';
+                volFill.style.opacity = '0.3';
+            } else {
+                bgMusic.volume = currentVolume;
+                muteBtn.style.color = '#94a3b8';
+                volFill.style.opacity = '1';
+            }
+        }
+        muteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMute();
+        });
+
+        function unlockAudio() {
+            isAudioUnlocked = true;
+            bgMusic.play().catch(() => {
+                isAudioUnlocked = false;
+            });
+        }
+        window.addEventListener('click', () => { if(!isAudioUnlocked) unlockAudio(); });
+
+        // Point 7 : nuage de sédiments — déclenché une seule fois au contact du fond
+        const sedimentCloud = document.getElementById('sediment-cloud');
+        let sedimentTriggered = false;
+
+        function checkSedimentTrigger() {
+            if (sedimentTriggered) return;
+            const rect = floorElement.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.75) {
+                sedimentTriggered = true;
+                sedimentCloud.classList.add('active');
+            }
+        }
+
+        // NOTE : l'ancien listener 'scroll' qui recalculait la profondeur, la règle,
+        // la zone et les sédiments a été fusionné dans mainLoop() (voir plus haut).
+        // Un listener 'scroll' séparé pouvait se déclencher beaucoup plus souvent
+        // qu'une frame d'affichage et réécrivait le DOM (jusqu'à ~240 graduations
+        // de règle) à chaque déclenchement, même quand la profondeur affichée
+        // n'avait pas changé. mainLoop() ne fait ce travail qu'une fois par frame,
+        // et seulement si la profondeur en mètres a effectivement changé.
+
+        // ============================================================
+        // POOL DE BULLES — évite la création/suppression DOM répétée
+        // ------------------------------------------------------------
+        // Avant : un nouvel élément div était créé toutes les 250ms puis
+        // détruit ~4-7s plus tard via setTimeout (beaucoup de garbage collection
+        // et de reflows d'insertion/suppression). Maintenant : un pool fixe
+        // d'éléments réutilisables, recyclés via l'évènement natif 'animationend'
+        // (pas de timer supplémentaire par bulle).
+        // ============================================================
+        const BUBBLE_POOL_SIZE = 18;
+        const bubblePool = [];
+        for (let i = 0; i < BUBBLE_POOL_SIZE; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            document.body.appendChild(bubble);
+            bubble.addEventListener('animationend', () => {
+                bubble.style.display = 'none';
+                bubble.classList.remove('anim-active');
+            });
+            bubblePool.push(bubble);
+        }
+
+        function spawnBubble() {
+            const bubble = bubblePool.find(b => !b.classList.contains('anim-active'));
+            if (!bubble) return; // pool saturé (rare) : on saute cette apparition, sans impact visible
+
+            const size = Math.random() * 6 + 3;
+            const leftPos = Math.random() * window.innerWidth;
+            const duration = Math.random() * 3 + 4;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${leftPos}px`;
+            bubble.style.display = 'block';
+
+            // Redémarre l'animation CSS depuis 0% (nécessaire car l'élément est réutilisé) :
+            // on coupe l'animation, on force un reflow synchrone (offsetWidth), puis on la
+            // réactive avec la nouvelle durée. Coût : un seul reflow sur un élément de
+            // quelques pixels, sans commune mesure avec un createElement/appendChild.
+            bubble.style.animation = 'none';
+            void bubble.offsetWidth;
+            bubble.style.animation = '';
+            bubble.style.animationDuration = `${duration}s`;
+            bubble.classList.add('anim-active');
+        }
+
+        function spawnContinuousBubbles() {
+            setInterval(() => {
+                if (window.scrollY > window.innerHeight * 0.3 && currentDepthGlobal < 1000) {
+                    spawnBubble();
+                }
+            }, 250);
+        }
+        spawnContinuousBubbles();
+
+        // ============================================================
+        // POOL DE BIOLUMINESCENCE — même principe que les bulles
+        // ============================================================
+        const BIOLUM_POOL_SIZE = 6;
+        const biolumPool = [];
+        for (let i = 0; i < BIOLUM_POOL_SIZE; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'biolum-dot';
+            dot.style.display = 'none';
+            document.body.appendChild(dot);
+            dot.addEventListener('animationend', () => {
+                dot.style.display = 'none';
+                dot.classList.remove('anim-active');
+            });
+            biolumPool.push(dot);
+        }
+
+        // Point 6 : bioluminescence aléatoire, discrète, à partir de la zone mésopélagique (200m)
+        function spawnBiolumDot() {
+            const dot = biolumPool.find(d => !d.classList.contains('anim-active'));
+            if (!dot) return; // pool saturé (rare, apparitions espacées) : on saute cette apparition
+
+            const colors = ['#38bdf8', '#fb7185', '#4ade80']; // bleu, rouge, vert
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = Math.random() * 4 + 3;
+            dot.style.width = `${size}px`;
+            dot.style.height = `${size}px`;
+            dot.style.left = `${Math.random() * 96 + 2}vw`;
+            dot.style.top = `${Math.random() * 90 + 5}vh`;
+            dot.style.background = color;
+            dot.style.boxShadow = `0 0 10px 3px ${color}`;
+            dot.style.display = 'block';
+
+            dot.style.animation = 'none';
+            void dot.offsetWidth;
+            dot.style.animation = '';
+            dot.classList.add('anim-active');
+        }
+
+        function scheduleNextBiolum() {
+            const delay = 500 + Math.random() * 2200; // apparitions espacées, avec parcimonie
+            setTimeout(() => {
+                if (currentDepthGlobal >= 200) spawnBiolumDot();
+                scheduleNextBiolum();
+            }, delay);
+        }
+        scheduleNextBiolum();
+
+        const popup = document.getElementById('media-popup');
+        const popupBox = document.getElementById('popup-box');
+        const closeBtn = document.getElementById('close-btn');
+
+        // OPTIM CPU (point 5) : les vidéos d'arrière-plan continuaient de jouer/décoder
+        // pendant qu'une popup mediaClick était ouverte — invisibles derrière le fond
+        // flouté, mais toujours actives. On les met en pause à l'ouverture, et on ne
+        // relance que celles qui étaient effectivement censées jouer (drapeau
+        // shouldPlay, posé par playObserver), en cas de scroll pendant que la popup
+        // était affichée.
+        function pauseBackgroundVideos() {
+            document.querySelectorAll('.depth-lazy-img').forEach((el) => {
+                if (el.tagName === 'VIDEO' && !el.paused) el.pause();
+            });
+        }
+        function resumeBackgroundVideos() {
+            document.querySelectorAll('.depth-lazy-img').forEach((el) => {
+                if (el.tagName === 'VIDEO' && el.dataset.shouldPlay === 'true' && el.readyState >= 2) {
+                    el.play().catch(() => {});
+                }
+            });
+        }
+
+        function openPopup(mediaPath) {
+            const oldMedia = popupBox.querySelector('.inserted-media');
+            if (oldMedia) oldMedia.remove();
+
+            const isVideo = mediaPath.endsWith('.mp4') || mediaPath.endsWith('.webm');
+            let mediaElement;
+
+            if (isVideo) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = mediaPath;
+                mediaElement.autoplay = true;
+                mediaElement.controls = true;
+                mediaElement.muted = true; // demandé : toutes les vidéos mediaClick sont muettes à l'ouverture
+                mediaElement.className = 'inserted-media';
+                mediaElement.onended = () => { closePopup(); };
+            } else {
+                mediaElement = document.createElement('img');
+                mediaElement.src = mediaPath;
+                mediaElement.className = 'inserted-media';
+            }
+
+            popupBox.insertBefore(mediaElement, closeBtn);
+            popup.classList.add('active');
+            isMediaOpen = true;
+            pauseBackgroundVideos();
+        }
+
+        function closePopup() {
+            popup.classList.remove('active');
+            isMediaOpen = false;
+            resumeBackgroundVideos();
+            setTimeout(() => {
+                const media = popupBox.querySelector('.inserted-media');
+                if (media) media.remove();
+            }, 300);
+        }
+
+        closeBtn.addEventListener('click', closePopup);
+        popup.addEventListener('click', closePopup);
+        popupBox.addEventListener('click', (e) => {
+            if(e.target !== closeBtn && !e.target.hasAttribute('controls')) {
+                closePopup();
+            } else {
+                e.stopPropagation();
+            }
+        });
+    </script>
+</body>
+</html>
