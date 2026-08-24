@@ -1,6 +1,54 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M22 19.2727C22 20.779 20.779 22 19.2727 22H14.7273C13.221 22 12 20.779 12 19.2727V12H19.2727C20.779 12 22 13.221 22 14.7273V19.2727Z" fill="#68C4FF"/>
-<path d="M20 2C21.1046 2 22 2.89543 22 4V7C22 8.10457 21.1046 9 20 9H17C15.8954 9 15 8.10457 15 7V4C15 2.89543 15.8954 2 17 2H20Z" fill="#0C79D8"/>
-<path d="M7 15C8.10457 15 9 15.8954 9 17V20C9 21.1046 8.10457 22 7 22H4C2.89543 22 2 21.1046 2 20V17C2 15.8954 2.89543 15 4 15H7Z" fill="#0C79D8"/>
-<path d="M12 12H4.72727C3.22104 12 2 10.779 2 9.27273V4.72727C2 3.22104 3.22104 2 4.72727 2H9.27273C10.779 2 12 3.22104 12 4.72727V12Z" fill="#2E9EFF"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Favicon SVT — feuille et ADN</title>
+  <desc id="desc">Emblème circulaire associant une feuille, une double hélice d’ADN et les couleurs de la nature et des sciences.</desc>
+  <defs>
+    <linearGradient id="ring" x1="90" y1="78" x2="424" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d7a33b"/>
+      <stop offset="0.23" stop-color="#f3d47d"/>
+      <stop offset="0.52" stop-color="#ad7622"/>
+      <stop offset="0.78" stop-color="#f0cb68"/>
+      <stop offset="1" stop-color="#885515"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="170" y1="135" x2="340" y2="377" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2f9b6f"/>
+      <stop offset="1" stop-color="#0e5646"/>
+    </linearGradient>
+    <linearGradient id="dna" x1="208" y1="142" x2="302" y2="370" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4d77e"/>
+      <stop offset="0.52" stop-color="#c28b2f"/>
+      <stop offset="1" stop-color="#f0ca67"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Couronne scientifique -->
+  <circle cx="256" cy="256" r="211" fill="#0c2637" stroke="url(#ring)" stroke-width="19"/>
+  <circle cx="256" cy="256" r="184" fill="#102f3d" stroke="#2b705d" stroke-width="7"/>
+
+  <!-- Feuille centrale -->
+  <path d="M256 390C181 348 150 281 168 214c16-60 66-91 148-103 18-3 35-8 50-17 1 80-13 147-48 199-18 27-39 48-62 64z"
+        fill="url(#leaf)" stroke="#73bb8d" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M256 385c-1-84 17-151 55-202 17-23 35-42 55-57"
+        fill="none" stroke="#d9b24c" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Double hélice intégrée à la nervure -->
+  <path d="M220 150c65 38 65 79 0 118s-65 80 1 124"
+        fill="none" stroke="url(#dna)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M292 150c-65 38-65 79 0 118s65 80-1 124"
+        fill="none" stroke="#8bc7cf" stroke-width="13" stroke-linecap="round"/>
+  <g fill="none" stroke="#eef4df" stroke-width="7" stroke-linecap="round">
+    <path d="M234 171h44"/>
+    <path d="M218 215h76"/>
+    <path d="M233 258h46"/>
+    <path d="M218 302h76"/>
+    <path d="M234 346h44"/>
+  </g>
+
+  <!-- Petits repères moléculaires -->
+  <g fill="#e6c45f">
+    <circle cx="125" cy="181" r="8"/>
+    <circle cx="389" cy="326" r="8"/>
+    <circle cx="373" cy="164" r="5"/>
+    <circle cx="139" cy="339" r="5"/>
+  </g>
 </svg>
