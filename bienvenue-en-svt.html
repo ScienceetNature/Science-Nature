@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bienvenue en SVT — 6e</title>
+<meta name="description" content="Tout ce qu'il faut savoir pour bien démarrer l'année en Sciences de la Vie et de la Terre.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --forest-950:#0e1c13;
+  --forest-900:#122619;
+  --forest-800:#1a3423;
+  --forest-700:#24462e;
+  --forest-600:#31593a;
+  --leaf-500:#4f7d45;
+  --leaf-400:#78a15c;
+  --leaf-300:#a3c47f;
+  --paper:#f5f0e1;
+  --paper-dim:#e9e1c9;
+  --ivory:#f7f4ea;
+  --amber:#e2952f;
+  --amber-deep:#c67418;
+  --rust:#b8461f;
+  --night-900:#080d16;
+  --night-800:#0d1626;
+  --night-700:#152238;
+  --teal:#2c6e6b;
+  --ink:#101a12;
+
+  --font-display:'Fredoka', sans-serif;
+  --font-body:'Nunito', sans-serif;
+
+  --step-40:clamp(2.4rem, 5vw + 1rem, 4.6rem);
+  --step-30:clamp(1.9rem, 3.2vw + 1rem, 3.2rem);
+  --step-20:clamp(1.4rem, 1.6vw + 1rem, 2rem);
+  --step-10:clamp(1.05rem, 0.6vw + 0.9rem, 1.25rem);
+  --step-00:clamp(0.95rem, 0.3vw + 0.85rem, 1.05rem);
+
+  --ease-out: cubic-bezier(.16,.8,.28,1);
+  --dur-m: .6s;
+  --dur-l: .9s;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--forest-950);
+  color:var(--ivory);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{
+  font-family:var(--font-display);
+  margin:0;
+  font-weight:600;
+  letter-spacing:-.01em;
+}
+p{margin:0;}
+ul{margin:0;padding:0;list-style:none;}
+a{color:inherit;}
+button{font-family:inherit;}
+img{max-width:100%;display:block;}
+
+::selection{background:var(--amber);color:var(--ink);}
+
+:focus-visible{
+  outline:3px solid var(--amber);
+  outline-offset:3px;
+  border-radius:4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+/* ============================================================
+   APP SHELL / NAVIGATION
+   ============================================================ */
+#app{position:fixed; inset:0; height:100dvh; width:100vw;}
+
+.slides{position:relative; width:100%; height:100%; overflow:hidden;}
+
+.slide{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:clamp(1.5rem,3vw,3.2rem) clamp(1.5rem,6vw,6rem);
+  opacity:0; transform:translateY(3vh) scale(.985);
+  transition:opacity .7s var(--ease-out), transform .7s var(--ease-out), visibility 0s linear .7s;
+  visibility:hidden; pointer-events:none; z-index:1;
+}
+.slide.is-active{
+  opacity:1; transform:none; visibility:visible; pointer-events:auto; z-index:2;
+  transition:opacity .7s var(--ease-out), transform .7s var(--ease-out);
+}
+.slide__bg{position:absolute; inset:0; z-index:0; overflow:hidden;}
+.slide__content{position:relative; z-index:1; width:100%; max-width:64rem; display:flex; flex-direction:column; align-items:center; text-align:center; gap:clamp(1rem,2.4vw,1.9rem);}
+.slide__content--wide{max-width:74rem;}
+.slide__content--left{align-items:flex-start; text-align:left;}
+
+.kicker{
+  font-family:var(--font-display); font-weight:600; font-size:var(--step-10);
+  color:var(--amber); letter-spacing:.01em;
+}
+.slide h2{font-size:var(--step-40); line-height:1.02; color:var(--ivory);}
+.slide h2 .accent{color:var(--amber);}
+.lede{font-size:var(--step-20); line-height:1.45; max-width:44rem; color:var(--paper-dim);}
+
+/* reveal steps */
+[data-step]{
+  opacity:0; transform:translateY(18px);
+  transition:opacity .6s var(--ease-out), transform .6s var(--ease-out);
+}
+[data-step].is-in{opacity:1; transform:translateY(0);}
+.slide:not(.is-active) [data-step]{transition:none;}
+
+.stagger>*{opacity:0; transform:translateY(14px); transition:opacity .5s var(--ease-out), transform .5s var(--ease-out);}
+.stagger.is-in>*{opacity:1; transform:translateY(0);}
+.stagger.is-in>*:nth-child(1){transition-delay:.03s}
+.stagger.is-in>*:nth-child(2){transition-delay:.09s}
+.stagger.is-in>*:nth-child(3){transition-delay:.15s}
+.stagger.is-in>*:nth-child(4){transition-delay:.21s}
+.stagger.is-in>*:nth-child(5){transition-delay:.27s}
+.stagger.is-in>*:nth-child(6){transition-delay:.33s}
+.stagger.is-in>*:nth-child(7){transition-delay:.39s}
+.stagger.is-in>*:nth-child(8){transition-delay:.45s}
+
+.ic{width:1.4em; height:1.4em; flex:none;}
+
+/* corner home mark */
+.home-mark{
+  position:fixed; top:clamp(.9rem,2vw,1.6rem); left:clamp(.9rem,2vw,1.6rem); z-index:20;
+  width:clamp(2.5rem,4vw,3.1rem); height:clamp(2.5rem,4vw,3.1rem);
+  border-radius:50%; border:1.5px solid rgba(247,244,234,.35); background:rgba(14,28,19,.4);
+  backdrop-filter:blur(6px); color:var(--paper); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:border-color .25s, transform .25s, background .25s;
+}
+.home-mark:hover{border-color:var(--amber); transform:scale(1.06); background:rgba(14,28,19,.65);}
+.home-mark svg{width:60%; height:60%;}
+
+/* progress rail */
+.progress-rail{
+  position:fixed; top:0; left:0; right:0; height:3px; z-index:20;
+  background:rgba(247,244,234,.12);
+}
+.progress-fill{
+  height:100%; width:0%; background:linear-gradient(90deg,var(--leaf-400),var(--amber));
+  transition:width .45s var(--ease-out);
+}
+
+/* side dot nav */
+.dots{
+  position:fixed; right:clamp(.8rem,2.4vw,2rem); top:50%; transform:translateY(-50%); z-index:20;
+  display:flex; flex-direction:column; gap:.65rem;
+}
+.dot{
+  appearance:none; border:none; background:none; padding:.4rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:flex-end; gap:.55rem;
+}
+.dot span{
+  width:9px; height:9px; border-radius:50%; background:rgba(247,244,234,.32);
+  transition:background .3s, transform .3s, width .3s, height .3s; display:block;
+}
+.dot .label{
+  font-size:.72rem; font-weight:700; color:var(--paper); opacity:0; transform:translateX(6px);
+  transition:opacity .2s, transform .2s; white-space:nowrap; background:rgba(14,28,19,.75);
+  padding:.25rem .55rem; border-radius:.4rem; letter-spacing:.01em;
+}
+.dot:hover .label{opacity:1; transform:translateX(0);}
+.dot:hover span, .dot:focus-visible span{background:rgba(247,244,234,.7);}
+.dot.is-active span{background:var(--amber); width:11px; height:11px; transform:scale(1.15);}
+
+/* hint */
+.hint{
+  position:fixed; left:50%; bottom:clamp(1.2rem,3vw,2.2rem); transform:translateX(-50%); z-index:20;
+  display:flex; align-items:center; gap:.55rem; font-size:.85rem; font-weight:700; color:var(--paper-dim);
+  background:rgba(14,28,19,.55); border:1px solid rgba(247,244,234,.18); backdrop-filter:blur(6px);
+  padding:.55rem 1rem; border-radius:2rem; opacity:1; transition:opacity .5s, transform .5s; pointer-events:none;
+}
+.hint svg{width:1rem; height:1rem; animation:hint-nudge 1.6s ease-in-out infinite;}
+.hint.is-hidden{opacity:0; transform:translateX(-50%) translateY(10px);}
+@keyframes hint-nudge{0%,100%{transform:translateX(0)} 50%{transform:translateX(5px)}}
+
+/* generic CTA button */
+.cta{
+  display:inline-flex; align-items:center; gap:.55rem; font-family:var(--font-display); font-weight:600;
+  font-size:var(--step-10); color:var(--ink); background:var(--amber); border:none; border-radius:3rem;
+  padding:.85rem 1.5rem; cursor:pointer; text-decoration:none; transition:transform .25s var(--ease-out), background .25s, box-shadow .25s;
+  box-shadow:0 10px 26px -12px rgba(226,149,47,.7);
+}
+.cta:hover{background:var(--amber-deep); transform:translateY(-2px);}
+.cta .ic{width:1.1em; height:1.1em;}
+.cta--ghost{background:transparent; color:var(--ivory); border:1.5px solid rgba(247,244,234,.4); box-shadow:none;}
+.cta--ghost:hover{border-color:var(--amber); color:var(--amber); background:rgba(247,244,234,.06);}
+
+/* browser-window mockup for live embeds */
+.browser{
+  width:100%; max-width:56rem; border-radius:1.1rem; overflow:hidden; background:var(--paper);
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.65), 0 0 0 1px rgba(247,244,234,.08);
+}
+.browser__bar{
+  display:flex; align-items:center; gap:.6rem; padding:.6rem .8rem; background:var(--paper-dim);
+}
+.browser__dots{display:flex; gap:.4rem;}
+.browser__dots span{width:9px; height:9px; border-radius:50%; background:rgba(16,26,18,.25);}
+.browser__url{
+  flex:1; font-size:.8rem; font-weight:700; color:var(--ink); background:#fff; border-radius:2rem;
+  padding:.35rem .9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.75;
+}
+.browser__frame-wrap{position:relative; width:100%; aspect-ratio:16/10; background:#fff;}
+.browser__frame-wrap iframe{position:absolute; inset:0; width:100%; height:100%; border:none;}
+.browser__open{
+  position:absolute; right:.8rem; bottom:.8rem; z-index:2;
+}
+
+@media (max-width:640px){
+  .dots{display:none;}
+  .browser__frame-wrap{aspect-ratio:9/13;}
+}
+
+/* ============================================================
+   SHARED DECOR
+   ============================================================ */
+.chalk-dust{position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.4px); background-size:22px 22px; opacity:.5;}
+.stars-layer{position:absolute; inset:0;}
+.stars-layer.a{background-image:radial-gradient(1.6px 1.6px at 20% 30%,#fff,transparent),radial-gradient(1.6px 1.6px at 70% 60%,#fff,transparent),radial-gradient(1.2px 1.2px at 40% 80%,#fff,transparent),radial-gradient(1.4px 1.4px at 85% 20%,#fff,transparent),radial-gradient(1.2px 1.2px at 55% 15%,#fff,transparent),radial-gradient(1.4px 1.4px at 10% 70%,#fff,transparent),radial-gradient(1.2px 1.2px at 92% 75%,#fff,transparent),radial-gradient(1.6px 1.6px at 33% 50%,#fff,transparent); opacity:.55; animation:twinkle 4s ease-in-out infinite;}
+.stars-layer.b{background-image:radial-gradient(1px 1px at 15% 55%,#fff,transparent),radial-gradient(1px 1px at 45% 25%,#fff,transparent),radial-gradient(1px 1px at 65% 85%,#fff,transparent),radial-gradient(1px 1px at 80% 45%,#fff,transparent),radial-gradient(1px 1px at 25% 10%,#fff,transparent),radial-gradient(1px 1px at 95% 60%,#fff,transparent); opacity:.35; animation:twinkle 5.5s ease-in-out infinite 1.2s;}
+@keyframes twinkle{0%,100%{opacity:.25} 50%{opacity:.7}}
+
+.card-row{display:flex; flex-wrap:wrap; justify-content:center; gap:1.1rem; width:100%;}
+.mat-card__icon{width:3.1rem; height:3.1rem; border-radius:50%; background:var(--forest-800); color:var(--amber); display:flex; align-items:center; justify-content:center; flex:none;}
+.mat-card__icon .ic{width:1.6rem; height:1.6rem;}
+
+/* ============================================================
+   SLIDE 1 — HERO
+   ============================================================ */
+.slide--hero .slide__bg{background:
+  radial-gradient(60% 50% at 50% 10%, rgba(163,196,127,.32), transparent 62%),
+  radial-gradient(90% 60% at 50% 100%, rgba(44,110,107,.4), transparent 70%),
+  linear-gradient(180deg, var(--forest-800) 0%, var(--forest-900) 45%, var(--night-900) 100%);
+}
+.emblem{width:clamp(8rem,16vw,11.5rem); height:clamp(8rem,16vw,11.5rem); color:var(--amber); animation:emblem-breathe 6s ease-in-out infinite;}
+@keyframes emblem-breathe{0%,100%{transform:scale(1)} 50%{transform:scale(1.04)}}
+.hero-title{font-size:var(--step-40); line-height:.98;}
+.hero-title span{display:block;}
+.hero-title .accent{color:var(--amber);}
+.badge-pill{display:inline-flex; align-items:center; gap:.5rem; padding:.5rem 1.15rem; border-radius:2rem; background:rgba(247,244,234,.1); border:1px solid rgba(247,244,234,.28); font-weight:700; font-size:var(--step-00); color:var(--paper-dim);}
+
+/* ============================================================
+   SLIDE 2 — MATÉRIEL
+   ============================================================ */
+.slide--materiel .slide__bg{background:linear-gradient(150deg,#4a3320 0%, #33230f 55%, #1c130a 100%);}
+.wood-grain{position:absolute; inset:0; background:repeating-linear-gradient(115deg, rgba(255,255,255,.03) 0 2px, transparent 2px 26px); mix-blend-mode:overlay;}
+.mat-card{flex:1 1 15rem; max-width:17rem; background:var(--paper); color:var(--ink); border-radius:1.4rem; padding:1.7rem 1.4rem; display:flex; flex-direction:column; align-items:center; gap:.7rem; text-align:center; box-shadow:0 20px 40px -20px rgba(0,0,0,.55);}
+.mat-card strong{font-family:var(--font-display); font-size:var(--step-10); font-weight:600;}
+.mat-card span{font-size:.9rem; color:#4a4030;}
+
+/* ============================================================
+   SLIDE 3 — DEUX THÈMES
+   ============================================================ */
+.slide--themes .slide__bg{background:radial-gradient(140% 100% at 50% -10%, rgba(120,161,92,.2), transparent 55%), linear-gradient(180deg, var(--forest-800), var(--forest-950));}
+.theme-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem; width:100%;}
+@media (max-width:760px){.theme-grid{grid-template-columns:1fr;}}
+.theme-card{background:rgba(247,244,234,.06); border:1px solid rgba(247,244,234,.16); border-radius:1.5rem; padding:1.8rem 1.6rem; text-align:left; backdrop-filter:blur(4px);}
+.theme-card__head{display:flex; align-items:center; gap:.8rem; margin-bottom:1rem;}
+.theme-card__icon{width:2.8rem; height:2.8rem; border-radius:50%; background:var(--amber); color:var(--ink); display:flex; align-items:center; justify-content:center; flex:none;}
+.theme-card__icon .ic{width:1.5rem; height:1.5rem;}
+.theme-card h3{font-size:var(--step-20); color:var(--ivory); font-weight:600;}
+.theme-card ul{display:flex; flex-direction:column; gap:.6rem;}
+.theme-card li{display:flex; align-items:flex-start; gap:.6rem; font-size:var(--step-00); color:var(--paper-dim); line-height:1.4;}
+.theme-card li .ic{color:var(--leaf-300); margin-top:.15rem;}
+
+/* ============================================================
+   SLIDE 4 — ATTITUDE
+   ============================================================ */
+.slide--attitude .slide__bg{background:linear-gradient(175deg, var(--forest-900), var(--forest-950) 60%, #0b1710);}
+.rules-grid{display:grid; grid-template-columns:1fr 1fr; gap:.85rem; width:100%;}
+@media (max-width:700px){.rules-grid{grid-template-columns:1fr;}}
+.rule-item{display:flex; align-items:flex-start; gap:.75rem; background:rgba(226,149,47,.08); border:1px solid rgba(226,149,47,.28); border-radius:1rem; padding:.9rem 1.05rem; text-align:left; font-size:var(--step-00); color:var(--paper-dim); line-height:1.4;}
+.rule-item .ic{color:var(--amber); flex:none; margin-top:.1rem;}
+
+/* ============================================================
+   SLIDE 5 — RÈGLES DE VIE
+   ============================================================ */
+.slide--regles .slide__bg{background:linear-gradient(175deg, var(--forest-900), var(--forest-950) 65%, #0b1710);}
+.intro-card{background:var(--paper); color:var(--ink); border-radius:1.4rem; padding:1.5rem 1.7rem; max-width:42rem; font-size:var(--step-10); line-height:1.5; box-shadow:0 20px 40px -20px rgba(0,0,0,.5);}
+.sanction-list{display:flex; flex-direction:column; gap:.65rem; width:100%; max-width:42rem;}
+.sanction-item{display:flex; align-items:center; gap:.8rem; background:rgba(184,70,31,.14); border:1px solid rgba(184,70,31,.35); border-radius:.9rem; padding:.8rem 1.1rem; text-align:left;}
+.sanction-item .ic{color:var(--rust); flex:none;}
+.sanction-item b{font-weight:800; color:var(--ivory);}
+.sanction-item span{color:var(--paper-dim); font-size:.92rem;}
+
+/* ============================================================
+   SLIDE 6 — ABSENCE
+   ============================================================ */
+.slide--absence .slide__bg{background:radial-gradient(120% 90% at 50% 0%, var(--night-700), var(--night-900) 65%);}
+.option-list{display:flex; flex-direction:column; gap:.6rem; width:100%; max-width:34rem;}
+.option-item{display:flex; align-items:center; gap:.85rem; background:rgba(247,244,234,.07); border:1px solid rgba(247,244,234,.16); border-radius:.9rem; padding:.75rem 1.1rem; text-align:left; font-size:var(--step-00); color:var(--paper-dim);}
+.option-item .ic{color:var(--leaf-300); flex:none;}
+.option-item a{color:var(--amber); font-weight:700; text-decoration:underline; text-underline-offset:2px;}
+.warn-banner{display:flex; align-items:center; gap:.7rem; background:rgba(184,70,31,.18); border:1px solid rgba(184,70,31,.42); border-radius:.9rem; padding:.85rem 1.2rem; max-width:34rem; font-weight:700; color:var(--ivory); font-size:.92rem;}
+.warn-banner .ic{color:var(--rust); flex:none;}
+
+/* ============================================================
+   SLIDE 7 — BONNES NOUVELLES
+   ============================================================ */
+.slide--bonnes .slide__bg{background:radial-gradient(90% 70% at 50% 0%, rgba(163,196,127,.3), transparent 60%), linear-gradient(180deg, var(--leaf-500) 0%, var(--forest-800) 55%, var(--forest-950) 100%);}
+.good-row{display:flex; flex-wrap:wrap; gap:1.1rem; justify-content:center; width:100%;}
+.good-card{flex:1 1 16rem; max-width:19rem; background:rgba(247,244,234,.96); color:var(--ink); border-radius:1.4rem; padding:1.7rem 1.5rem; text-align:center; box-shadow:0 20px 40px -20px rgba(0,0,0,.5);}
+.good-card .mat-card__icon{margin:0 auto .8rem;}
+.good-card strong{display:block; font-family:var(--font-display); font-size:var(--step-10); font-weight:600;}
+.teaser{display:inline-flex; align-items:center; gap:.5rem; font-style:italic; color:var(--paper-dim); font-size:var(--step-00); opacity:.85;}
+.teaser .ic{color:var(--amber);}
+
+/* ============================================================
+   SLIDE 8 — MAINTENANT / QUATRE MAISONS
+   ============================================================ */
+.slide--maisons .slide__bg{background:radial-gradient(120% 90% at 50% 10%, var(--night-700), var(--night-900) 70%);}
+.maintenant{font-family:var(--font-display); font-weight:600; font-size:var(--step-40); color:var(--paper-dim); letter-spacing:.02em; transition:opacity .6s var(--ease-out), transform .6s var(--ease-out); animation:pulse-soft 2.4s ease-in-out infinite;}
+@keyframes pulse-soft{0%,100%{opacity:.65} 50%{opacity:1}}
+.slide--maisons.phase-2 .maintenant{opacity:0; transform:translateY(-14px) scale(.96); pointer-events:none; position:absolute; animation:none;}
+.maisons-reveal{opacity:0; transform:translateY(14px); pointer-events:none; transition:opacity .7s var(--ease-out) .1s, transform .7s var(--ease-out) .1s; display:flex; flex-direction:column; align-items:center; gap:1.3rem; width:100%;}
+.slide--maisons.phase-2 .maisons-reveal{opacity:1; transform:none; pointer-events:auto;}
+.flags{display:flex; gap:.6rem;}
+.flag{width:2.1rem; height:2.8rem; border-radius:.35rem .35rem .1rem .1rem; opacity:.92;}
+.flag:nth-child(1){background:var(--leaf-400);}
+.flag:nth-child(2){background:var(--amber);}
+.flag:nth-child(3){background:var(--rust);}
+.flag:nth-child(4){background:var(--teal);}
+
+.shout{text-transform:uppercase; letter-spacing:.01em;}
+.visually-hidden{position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0; margin:-1px;}
+</style>
+</head>
+<body>
+
+<!-- ICON SPRITE -->
+<svg style="display:none" aria-hidden="true">
+<defs id="icon-defs">
+
+  <symbol id="i-leaf-check" viewBox="0 0 24 24">
+    <path d="M4 20C4 11 10 5 20 4c1 10-5 16-14 16-1-2-1-3-1-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 15l2.3 2.3L16 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-warn" viewBox="0 0 24 24">
+    <path d="M12 4l9 16H3L12 4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M12 10.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="12" cy="17.3" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+
+  <symbol id="i-notebook" viewBox="0 0 24 24">
+    <rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M9 3v18" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12.5 8h4M12.5 12h4M12.5 16h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12.5" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12 8v5l3.4 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 2.2h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-book-slash" viewBox="0 0 24 24">
+    <path d="M5 5.5C5 4.7 5.7 4 6.5 4H18a1 1 0 011 1v14a1 1 0 01-1 1H6.5a1.5 1.5 0 01-1.5-1.5v-13z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M5 17.5C5 16.7 5.7 16 6.5 16H19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-branch" viewBox="0 0 24 24">
+    <path d="M12 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M12 13c0-3.5 2.3-5.6 6.5-6.2C18.2 10.8 15.8 13 12 13z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M12 9C12 5.8 9.9 3.9 6 3.4 6.3 7.4 8.5 9.4 12 9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-heart-pulse" viewBox="0 0 24 24">
+    <path d="M12 20s-7.5-4.6-9.6-9.6C1.2 6.9 3 4 6.2 4c2 0 3.4 1.1 4.3 2.4L12 8l1.5-1.6C14.4 5.1 15.8 4 17.8 4 21 4 22.8 6.9 21.6 10.4 19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6 12h3l1.5-3L13 15l1.6-3H18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-people" viewBox="0 0 24 24">
+    <circle cx="8.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <circle cx="16" cy="9" r="2.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M3.3 19c.4-3 2.6-4.7 5.2-4.7s4.8 1.7 5.2 4.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M14.5 14.6c2.3.2 4 1.8 4.3 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-monitor" viewBox="0 0 24 24">
+    <rect x="3" y="4.5" width="18" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M8.5 20.5h7M12 16.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M7 12l2.6-3.2L12 11l2.2-2.6L17 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M3.5 12h17M12 3.5c2.6 2.3 4 5.2 4 8.5s-1.4 6.2-4 8.5c-2.6-2.3-4-5.2-4-8.5s1.4-6.2 4-8.5z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+  </symbol>
+
+  <symbol id="i-gift" viewBox="0 0 24 24">
+    <rect x="3.5" y="9.5" width="17" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M3.5 9.5h17V13h-17z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M12 9.5v10" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12 9.5C11 6 8.5 4.5 7 5.4c-1.7 1-.6 4.1 5 4.1zM12 9.5c1-3.5 3.5-5 5-4.1 1.7 1 .6 4.1-5 4.1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-sparkle" viewBox="0 0 24 24">
+    <path d="M12 3c.6 3.8 2.2 5.4 6 6-3.8.6-5.4 2.2-6 6-.6-3.8-2.2-5.4-6-6 3.8-.6 5.4-2.2 6-6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M19 16c.3 1.6.9 2.2 2.5 2.5-1.6.3-2.2.9-2.5 2.5-.3-1.6-.9-2.2-2.5-2.5 1.6-.3 2.2-.9 2.5-2.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-arrow" viewBox="0 0 24 24">
+    <path d="M4 12h15.5M13.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-external" viewBox="0 0 24 24">
+    <path d="M9 5H5.5A1.5 1.5 0 004 6.5v12A1.5 1.5 0 005.5 20h12a1.5 1.5 0 001.5-1.5V15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M13.5 4H20v6.5M20 4l-9.5 9.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-emblem" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M6 66c14-6 28-6 54-6s40 0 54 6" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".6"/>
+    <path d="M14 58L34 30l16 20 14-24 18 22 14-14 10 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="60" cy="60" r="7" fill="currentColor"/>
+  </symbol>
+
+</defs>
+</svg>
+
+<!-- APP ROOT -->
+<div id="app">
+
+  <div class="visually-hidden" aria-live="polite" id="liveRegion"></div>
+
+  <button class="home-mark no-advance" id="homeMark" type="button" aria-label="Revenir au début">
+    <svg><use href="#i-emblem"/></svg>
+  </button>
+
+  <div class="progress-rail" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+  <nav class="dots no-advance" aria-label="Navigation entre les sections" id="dots">
+    <button class="dot" data-goto="0" aria-label="Section 1 : Bienvenue"><span></span><span class="label">Bienvenue</span></button>
+    <button class="dot" data-goto="1" aria-label="Section 2 : Le matériel"><span></span><span class="label">Le matériel</span></button>
+    <button class="dot" data-goto="2" aria-label="Section 3 : Les deux thèmes"><span></span><span class="label">Les deux thèmes</span></button>
+    <button class="dot" data-goto="3" aria-label="Section 4 : Attitude en classe"><span></span><span class="label">Attitude en classe</span></button>
+    <button class="dot" data-goto="4" aria-label="Section 5 : Règles de vie"><span></span><span class="label">Règles de vie</span></button>
+    <button class="dot" data-goto="5" aria-label="Section 6 : En cas d'absence"><span></span><span class="label">En cas d'absence</span></button>
+    <button class="dot" data-goto="6" aria-label="Section 7 : Bonnes nouvelles"><span></span><span class="label">Bonnes nouvelles</span></button>
+    <button class="dot" data-goto="7" aria-label="Section 8 : Les quatre maisons"><span></span><span class="label">Les 4 maisons</span></button>
+  </nav>
+
+  <div class="hint" id="hint"><svg><use href="#i-arrow"/></svg><span>Clique ou appuie sur une touche pour avancer</span></div>
+
+  <main class="slides" id="slides">
+
+    <!-- 1 — BIENVENUE -->
+    <section class="slide slide--hero" data-index="0" data-max-step="2" aria-label="1 sur 8 : Bienvenue en SVT">
+      <div class="slide__bg"></div>
+      <div class="slide__content">
+        <svg class="emblem" data-step="0" aria-hidden="true"><use href="#i-emblem"/></svg>
+        <h2 class="hero-title" data-step="0">
+          <span>Bienvenue</span>
+          <span data-step="1">en <span class="accent">SVT</span></span>
+        </h2>
+        <div class="badge-pill" data-step="2">Programme du cycle 3</div>
+      </div>
+    </section>
+
+    <!-- 2 — MATÉRIEL -->
+    <section class="slide slide--materiel" data-index="1" data-max-step="3" aria-label="2 sur 8 : Le matériel à avoir à chaque séance">
+      <div class="slide__bg"><div class="wood-grain"></div></div>
+      <div class="slide__content slide__content--wide">
+        <p class="kicker" data-step="0">Chaque séance</p>
+        <h2 data-step="0">Le matériel à avoir</h2>
+        <div class="card-row">
+          <div class="mat-card" data-step="1">
+            <span class="mat-card__icon"><svg class="ic"><use href="#i-notebook"/></svg></span>
+            <strong>Cahier, trousse et carnet</strong>
+            <span>À apporter à chaque cours.</span>
+          </div>
+          <div class="mat-card" data-step="2">
+            <span class="mat-card__icon"><svg class="ic"><use href="#i-clock"/></svg></span>
+            <strong>1h ou 2h par semaine</strong>
+            <span>Selon les semaines.</span>
+          </div>
+          <div class="mat-card" data-step="3">
+            <span class="mat-card__icon"><svg class="ic"><use href="#i-book-slash"/></svg></span>
+            <strong>Pas besoin de manuel !</strong>
+            <span>Tout est fourni en classe.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 — DEUX THÈMES -->
+    <section class="slide slide--themes" data-index="2" data-max-step="2" aria-label="3 sur 8 : Deux thèmes à étudier">
+      <div class="slide__bg"><div class="chalk-dust"></div></div>
+      <div class="slide__content slide__content--wide">
+        <p class="kicker" data-step="0">Au programme</p>
+        <h2 data-step="0">Deux thèmes à étudier</h2>
+        <div class="theme-grid">
+          <div class="theme-card" data-step="1">
+            <div class="theme-card__head">
+              <span class="theme-card__icon"><svg class="ic"><use href="#i-branch"/></svg></span>
+              <h3>Les êtres vivants dans leur environnement</h3>
+            </div>
+            <ul>
+              <li><svg class="ic"><use href="#i-leaf-check"/></svg><span>Classification du vivant</span></li>
+              <li><svg class="ic"><use href="#i-leaf-check"/></svg><span>Les êtres vivants du passé</span></li>
+              <li><svg class="ic"><use href="#i-leaf-check"/></svg><span>Cycle de développement des êtres vivants</span></li>
+            </ul>
+          </div>
+          <div class="theme-card" data-step="2">
+            <div class="theme-card__head">
+              <span class="theme-card__icon"><svg class="ic"><use href="#i-heart-pulse"/></svg></span>
+              <h3>Le corps humain et la santé</h3>
+            </div>
+            <ul>
+              <li><svg class="ic"><use href="#i-leaf-check"/></svg><span>Alimentation humaine (les organes)</span></li>
+              <li><svg class="ic"><use href="#i-leaf-check"/></svg><span>Puberté et reproduction humaine</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — ATTITUDE -->
+    <section class="slide slide--attitude" data-index="3" data-max-step="4" aria-label="4 sur 8 : Attitude exigée en classe">
+      <div class="slide__bg"><div class="chalk-dust"></div></div>
+      <div class="slide__content slide__content--wide">
+        <p class="kicker" data-step="0">En classe</p>
+        <h2 data-step="0">Attitude exigée en classe</h2>
+        <div class="rules-grid">
+          <div class="rule-item" data-step="1"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Quand le professeur parle, je me tais et j'écoute !</span></div>
+          <div class="rule-item" data-step="1"><svg class="ic"><use href="#i-leaf-check"/></svg><span>J'arrive à l'heure en cours</span></div>
+          <div class="rule-item" data-step="2"><svg class="ic"><use href="#i-leaf-check"/></svg><span>J'attends l'autorisation pour m'asseoir, puis je sors mon matériel</span></div>
+          <div class="rule-item" data-step="2"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Je lève le doigt pour demander la parole</span></div>
+          <div class="rule-item" data-step="3"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Je ne me lève pas sans autorisation</span></div>
+          <div class="rule-item" data-step="3"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Je suis poli et respectueux du professeur et de mes camarades</span></div>
+          <div class="rule-item" data-step="4"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Je respecte les lieux et le matériel</span></div>
+          <div class="rule-item" data-step="4"><svg class="ic"><use href="#i-leaf-check"/></svg><span>Je ne sors de la classe qu'après autorisation du professeur</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 — RÈGLES DE VIE -->
+    <section class="slide slide--regles" data-index="4" data-max-step="2" aria-label="5 sur 8 : Les règles de vie dans la classe">
+      <div class="slide__bg"><div class="chalk-dust"></div></div>
+      <div class="slide__content">
+        <p class="kicker" data-step="0">Pourquoi des règles ?</p>
+        <h2 data-step="0">Les règles de vie dans la classe</h2>
+        <p class="intro-card" data-step="1">Les règles sont indispensables au bon fonctionnement de la classe : elles traduisent un respect mutuel, notamment pour garantir la sécurité de tous lors de certaines manipulations ou lors des sorties.</p>
+        <div class="sanction-list stagger" data-step="2">
+          <div class="sanction-item"><svg class="ic"><use href="#i-warn"/></svg><p><b>Bavardages</b> <span>— observation, retenue…</span></p></div>
+          <div class="sanction-item"><svg class="ic"><use href="#i-warn"/></svg><p><b>Comportement en classe</b> <span>— observation, exclusion…</span></p></div>
+          <div class="sanction-item"><svg class="ic"><use href="#i-warn"/></svg><p><b>Matériel oublié</b> <span>— 3 fois = 1h de retenue</span></p></div>
+          <div class="sanction-item"><svg class="ic"><use href="#i-warn"/></svg><p><b>Travail à la maison</b> <span>— 3 fois = 1h de retenue</span></p></div>
+          <div class="sanction-item"><svg class="ic"><use href="#i-warn"/></svg><p><b>Tricherie</b> <span>— zéro attribué + rapport au chef d'établissement</span></p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 — ABSENCE -->
+    <section class="slide slide--absence" data-index="5" data-max-step="3" aria-label="6 sur 8 : En cas d'absence">
+      <div class="slide__bg"><div class="stars-layer a"></div><div class="stars-layer b"></div></div>
+      <div class="slide__content">
+        <p class="kicker" data-step="0">Un imprévu ?</p>
+        <h2 data-step="0">En cas d'absence</h2>
+        <p class="lede" data-step="0">C'est ton devoir de récupérer les cours manqués.</p>
+        <div class="option-list stagger" data-step="1">
+          <div class="option-item"><svg class="ic"><use href="#i-people"/></svg><span>Demander aux autres élèves</span></div>
+          <div class="option-item"><svg class="ic"><use href="#i-monitor"/></svg><span>Regarder sur Pronote</span></div>
+          <div class="option-item"><svg class="ic"><use href="#i-globe"/></svg><span>Aller sur <a class="no-advance" href="https://scienceetnature.alwaysdata.net/" target="_blank" rel="noopener">le site du prof</a></span></div>
+        </div>
+        <div class="warn-banner" data-step="2"><svg class="ic"><use href="#i-warn"/></svg><span>Il n'y a pas de dispense de contrôle ou de devoir en cas d'absence !</span></div>
+        <div class="browser no-advance" data-step="3">
+          <div class="browser__bar">
+            <div class="browser__dots"><span></span><span></span><span></span></div>
+            <div class="browser__url">scienceetnature.alwaysdata.net</div>
+          </div>
+          <div class="browser__frame-wrap">
+            <iframe src="https://scienceetnature.alwaysdata.net/" title="Aperçu en direct du site du professeur" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <a class="cta browser__open" href="https://scienceetnature.alwaysdata.net/" target="_blank" rel="noopener">Ouvrir <svg class="ic"><use href="#i-external"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 — BONNES NOUVELLES -->
+    <section class="slide slide--bonnes" data-index="6" data-max-step="3" aria-label="7 sur 8 : Bonnes nouvelles">
+      <div class="slide__bg"></div>
+      <div class="slide__content">
+        <p class="kicker" data-step="0">Respire</p>
+        <h2 class="shout" data-step="0">Bonnes nouvelles</h2>
+        <div class="good-row">
+          <div class="good-card" data-step="1">
+            <span class="mat-card__icon"><svg class="ic"><use href="#i-gift"/></svg></span>
+            <strong>Pratiquement aucun devoir maison !</strong>
+          </div>
+          <div class="good-card" data-step="2">
+            <span class="mat-card__icon"><svg class="ic"><use href="#i-gift"/></svg></span>
+            <strong>Pas de plan de classe !</strong>
+          </div>
+        </div>
+        <p class="teaser" data-step="3"><svg class="ic"><use href="#i-sparkle"/></svg> Sauf si…</p>
+      </div>
+    </section>
+
+    <!-- 8 — MAINTENANT / LES QUATRE MAISONS -->
+    <section class="slide slide--maisons" data-index="7" data-max-step="1" aria-label="8 sur 8 : Maintenant, les quatre maisons">
+      <div class="slide__bg"><div class="stars-layer a"></div><div class="stars-layer b"></div></div>
+      <div class="slide__content">
+        <p class="maintenant">Maintenant…</p>
+        <div class="maisons-reveal">
+          <p class="kicker">La suite</p>
+          <h2>Les Quatre Maisons</h2>
+          <p class="lede">Chaque élève rejoint l'une des quatre maisons de la classe. Découvre laquelle t'attend.</p>
+          <div class="flags" aria-hidden="true"><span class="flag"></span><span class="flag"></span><span class="flag"></span><span class="flag"></span></div>
+          <div class="browser no-advance">
+            <div class="browser__bar">
+              <div class="browser__dots"><span></span><span></span><span></span></div>
+              <div class="browser__url">scienceetnature.github.io/Science-Nature/PrezMaison</div>
+            </div>
+            <div class="browser__frame-wrap">
+              <iframe src="https://scienceetnature.github.io/Science-Nature/PrezMaison/index.html" title="Présentation en direct des quatre maisons" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+          </div>
+          <a class="cta no-advance" href="https://scienceetnature.github.io/Science-Nature/PrezMaison/index.html" target="_blank" rel="noopener">Découvrir les quatre maisons <svg class="ic"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
+  var progressFill = document.getElementById('progressFill');
+  var hint = document.getElementById('hint');
+  var liveRegion = document.getElementById('liveRegion');
+  var homeMark = document.getElementById('homeMark');
+  var slidesRoot = document.getElementById('slides');
+
+  var current = 0;
+  var step = 0;
+  var hasInteracted = false;
+
+  function maxStep(i){
+    return parseInt(slides[i].getAttribute('data-max-step') || '0', 10);
+  }
+
+  function render(){
+    slides.forEach(function(slideEl, i){
+      var active = i === current;
+      slideEl.classList.toggle('is-active', active);
+      if (active){
+        var stepEls = slideEl.querySelectorAll('[data-step]');
+        for (var k = 0; k < stepEls.length; k++){
+          var el = stepEls[k];
+          var s = parseInt(el.getAttribute('data-step'), 10) || 0;
+          el.classList.toggle('is-in', s <= step);
+        }
+        if (i === 7){
+          slideEl.classList.toggle('phase-2', step >= 1);
+        }
+      }
+    });
+
+    dots.forEach(function(d, i){
+      d.classList.toggle('is-active', i === current);
+    });
+
+    var m = maxStep(current);
+    var segFrac = m > 0 ? (step / m) : 1;
+    var pct = ((current + segFrac) / total) * 100;
+    progressFill.style.width = pct + '%';
+
+    var label = slides[current].getAttribute('aria-label') || '';
+    liveRegion.textContent = label;
+  }
+
+  function dismissHint(){
+    if (!hasInteracted){
+      hasInteracted = true;
+      hint.classList.add('is-hidden');
+    }
+  }
+
+  function next(){
+    dismissHint();
+    var m = maxStep(current);
+    if (step < m){
+      step += 1;
+    } else if (current < total - 1){
+      current += 1;
+      step = 0;
+    }
+    render();
+  }
+
+  function prev(){
+    dismissHint();
+    if (step > 0){
+      step -= 1;
+    } else if (current > 0){
+      current -= 1;
+      step = maxStep(current);
+    }
+    render();
+  }
+
+  function goTo(i){
+    dismissHint();
+    i = Math.max(0, Math.min(total - 1, i));
+    current = i;
+    step = maxStep(current);
+    render();
+  }
+
+  slidesRoot.addEventListener('click', function(e){
+    if (e.target.closest('.no-advance')) return;
+    next();
+  });
+
+  document.addEventListener('keydown', function(e){
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Spacebar' || k === 'Enter'){
+      e.preventDefault();
+      next();
+    } else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace'){
+      e.preventDefault();
+      prev();
+    } else if (k === 'Home'){
+      e.preventDefault();
+      goTo(0);
+      step = 0;
+      render();
+    } else if (k === 'End'){
+      e.preventDefault();
+      goTo(total - 1);
+    }
+  });
+
+  dots.forEach(function(d){
+    d.addEventListener('click', function(e){
+      e.stopPropagation();
+      goTo(parseInt(d.getAttribute('data-goto'), 10));
+    });
+  });
+
+  homeMark.addEventListener('click', function(e){
+    e.stopPropagation();
+    dismissHint();
+    current = 0;
+    step = 0;
+    render();
+  });
+
+  var touchStartY = null, touchStartX = null;
+  slidesRoot.addEventListener('touchstart', function(e){
+    if (e.target.closest('.no-advance')){ touchStartY = null; return; }
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+  }, {passive:true});
+  slidesRoot.addEventListener('touchend', function(e){
+    if (touchStartY === null) return;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dy) > Math.abs(dx)){
+      if (dy < -40) next();
+      else if (dy > 40) prev();
+    } else {
+      if (dx < -40) next();
+      else if (dx > 40) prev();
+    }
+    touchStartY = null;
+  }, {passive:true});
+
+  requestAnimationFrame(function(){
+    setTimeout(render, 60);
+  });
+})();
+</script>
+</body>
+</html>
