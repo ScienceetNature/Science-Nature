@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>La fresque des énergies fossiles</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand">
+      <span class="brand-mark">F</span>
+      <div>
+        <strong>La fresque des énergies fossiles</strong>
+        <small id="progressText">0 carte sur 26</small>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="previousButton" type="button">Précédente</button>
+      <button id="nextButton" class="primary" type="button">Carte suivante</button>
+      <button id="overviewButton" type="button">Vue d’ensemble</button>
+      <button id="resetButton" type="button">Recommencer</button>
+      <button id="fullscreenButton" type="button">Plein écran</button>
+    </div>
+  </header>
+
+  <main id="viewport" class="viewport" aria-label="Fresque interactive">
+    <div id="canvasShell" class="canvas-shell">
+      <section id="frescoCanvas" class="fresco-canvas" aria-live="polite">
+        <svg id="arrows" class="arrows" width="3600" height="1740" viewBox="0 0 3600 1740" aria-hidden="true">
+          <defs>
+            <marker id="arrowHead" markerWidth="18" markerHeight="18" refX="16" refY="9" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L18,9 L0,18 Z" fill="#d8b34c"></path>
+            </marker>
+          </defs>
+        </svg>
+      </section>
+    </div>
+    <p class="click-hint">Cliquez dans la fresque, utilisez la barre d’espace ou le bouton « Carte suivante ».</p>
+  </main>
+
+  <section id="cover" class="cover">
+    <img src="assets/cartes/00_verso_logo.jpg" alt="La fresque des énergies fossiles">
+    <button id="startButton" class="start-button" type="button">Commencer la fresque</button>
+  </section>
+
+  <dialog id="cardDialog" class="card-dialog">
+    <button id="closeDialog" class="close-dialog" type="button" aria-label="Fermer">×</button>
+    <img id="dialogImage" alt="Carte agrandie">
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
